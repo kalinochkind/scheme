@@ -39,7 +39,7 @@ int main()
                     std::getline(std::cin, t);
                     if(std::cin.eof())
                         break;
-                    s += " " + t;
+                    s += "\n" + t;
                 }
             }
         }

@@ -19,6 +19,8 @@ std::string SchemeFunc::toString() const
     {
         if(i != params.begin())
             res += " ";
+        if(arglist && next(i) == params.end())
+            res += ". ";
         res += *i;
     }
     res += ")";

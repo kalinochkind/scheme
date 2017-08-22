@@ -2,6 +2,36 @@
 #include "std.h"
 #include "eval.h"
 
+static std::shared_ptr<SchemeObject>
+make_function(const std::list<std::shared_ptr<ASTNode>> &l, const Context &context, const std::string &form)
+{
+    if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
+        throw eval_error(form + ": parameters and code required");
+    auto pl = l.front()->list;
+    if(form == "define")
+        pl.pop_front();
+    std::shared_ptr<SchemeFunc> f = std::make_shared<SchemeFunc>();
+    for(auto i = pl.begin(); i != pl.end(); ++i)
+    {
+        if((*i)->type != ast_type_t::NAME)
+            throw eval_error(form + ": list of names required");
+        if((*i)->value == ".")
+        {
+            if(next(i) == pl.end() || next(next(i)) != pl.end())
+                throw eval_error(form + ": incorrect dot syntax");
+            f->arglist = true;
+            continue;
+        }
+        f->params.push_back((*i)->value);
+    }
+    for(auto i = next(l.begin()); i != l.end(); ++i)
+    {
+        f->body.push_back(**i);
+    }
+    f->context = context;
+    return std::dynamic_pointer_cast<SchemeObject>(f);
+}
+
 std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(const std::list<std::shared_ptr<ASTNode>> &,
                                                                             Context &context,
                                                                             std::shared_ptr<SchemeFunc> tail_func)>> special_forms = {
@@ -19,24 +49,9 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             }
             else if(l.front()->type == ast_type_t::LIST && l.front()->list.size())
             {
-                auto pl = l.front()->list;
-                for(auto &&i : pl)
-                {
-                    if(i->type != ast_type_t::NAME)
-                        throw eval_error("define: list of names required");
-                }
-                std::shared_ptr<SchemeFunc> f = std::make_shared<SchemeFunc>();
-                for(auto i = next(pl.begin()); i != pl.end(); ++i)
-                {
-                    f->params.push_back((*i)->value);
-                }
-                for(auto i = next(l.begin()); i != l.end(); ++i)
-                {
-                    f->body.push_back(**i);
-                }
-                f->context = context;
-                context.set(pl.front()->value, f);
-                return std::dynamic_pointer_cast<SchemeObject>(f);
+                auto f = make_function(l, context, "define");
+                context.set(l.front()->list.front()->value, f);
+                return f;
             }
             else
                 throw eval_error("define: invalid arguments");
@@ -44,22 +59,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
         },
         {"lambda", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                       std::shared_ptr<SchemeFunc>) {
-            if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
-                throw eval_error("lambda: parameters and code required");
-            auto pl = l.front()->list;
-            std::shared_ptr<SchemeFunc> f = std::make_shared<SchemeFunc>();
-            for(auto i : pl)
-            {
-                if(i->type != ast_type_t::NAME)
-                    throw eval_error("lambda: list of names required");
-                f->params.push_back(i->value);
-            }
-            for(auto i = next(l.begin()); i != l.end(); ++i)
-            {
-                f->body.push_back(**i);
-            }
-            f->context = context;
-            return std::dynamic_pointer_cast<SchemeObject>(f);
+            return make_function(l, context, "lambda");
         }
         },
         {"let",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,

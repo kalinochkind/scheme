@@ -46,7 +46,7 @@ static size_t _parse(const std::string &s, ASTNode &o, size_t i)
         {
             if(s[i] == '.')
             {
-                if (dot)
+                if(dot)
                     throw parse_error("Invalid numeric literal");
                 else
                     dot = true;
@@ -76,7 +76,6 @@ std::vector<ASTNode> parseString(const std::string &s)
         i = _parse(s, o, i);
         if(i)
             res.push_back(std::move(o));
-    }
-    while(i);
+    } while(i);
     return res;
 }

@@ -181,11 +181,6 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(res));
         }
         },
-        {"newline",   [](const std::list<std::shared_ptr<SchemeObject>> &) {
-            std::cout << std::endl;
-            return scheme_empty;
-        }
-        },
         {"display",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("display: one argument required");
@@ -236,29 +231,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return p->cdr;
         }
         },
-        {"list",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            std::shared_ptr<SchemePair> p = std::dynamic_pointer_cast<SchemePair>(scheme_nil);
-            for(auto i = l.rbegin(); i != l.rend(); ++i)
-            {
-                p = std::make_shared<SchemePair>(*i, p);
-            }
-            return std::dynamic_pointer_cast<SchemeObject>(p);
-        }
-        },
         {"null?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("null?: one argument required");
             return (l.front() == scheme_nil) ? scheme_true : scheme_false;
-        }
-        },
-        {"min",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            return fold(l, 0, [](long long a, long long b) { return std::min(a, b); },
-                        [](double a, double b) { return std::min(a, b); }, true);
-        }
-        },
-        {"max",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            return fold(l, 0, [](long long a, long long b) { return std::max(a, b); },
-                        [](double a, double b) { return std::max(a, b); }, true);
         }
         },
 };

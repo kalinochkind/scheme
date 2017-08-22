@@ -80,8 +80,9 @@ struct SchemeFunc: public SchemeObject
     std::list<std::string> params;
     std::list<ASTNode> body;
     Context context;
+    bool arglist;
 
-    SchemeFunc(): params(), body(), context() {};
+    SchemeFunc(): params(), body(), context(), arglist(false) {};
 
     std::string toString() const override;
 };

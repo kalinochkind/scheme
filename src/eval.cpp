@@ -68,7 +68,22 @@ std::shared_ptr<SchemeObject> ASTNode::evaluate(Context &context, std::shared_pt
             auto lit = val_list.begin();
             for(; lit != val_list.end() && pit != f->params.end(); ++lit, ++pit)
             {
+                if(f->arglist && next(pit) == f->params.end())
+                {
+                    auto rem = scheme_nil;
+                    for(auto rlit = val_list.rbegin(); rlit.base() != lit; ++rlit)
+                        rem = std::make_shared<SchemePair>(*rlit, rem);
+                    local_context.set(*pit, rem);
+                    lit = val_list.end();
+                    ++pit;
+                    break;
+                }
                 local_context.set(*pit, *lit);
+            }
+            if(f->arglist && next(pit) == f->params.end())
+            {
+                local_context.set(*pit, scheme_nil);
+                ++pit;
             }
             if(lit != val_list.end())
             {
