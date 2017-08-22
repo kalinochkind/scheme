@@ -6,4 +6,5 @@ std::string startup = "(define (> x y) (< y x)) "
         "(define (not x) (if x false true)) "
         "(define (abs x) (if (< x 0) (- x) x)) "
         "(define (positive? x) (> x 0)) "
-        "(define (negative? x) (< x 0)) ";
+        "(define (negative? x) (< x 0)) "
+        "(define nil (list))";

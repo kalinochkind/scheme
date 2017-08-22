@@ -1,5 +1,6 @@
 #include <std.h>
 #include "schemeobject.h"
+#include "std.h"
 
 std::string SchemeInt::toString() const
 {
@@ -45,6 +46,23 @@ std::string SchemeBool::toString() const
 std::string SchemeString::toString() const
 {
     return value;
+}
+
+std::string SchemePair::toString() const
+{
+    if(!car)
+        return "()";
+    std::string res = "(" + car->toString();
+    std::shared_ptr<SchemeObject> p = cdr;
+    std::shared_ptr<SchemePair> pp;
+    while((pp = std::dynamic_pointer_cast<SchemePair>(p)))
+    {
+        if(p == scheme_nil)
+            return res + ")";
+        res += " " + pp->car->toString();
+        p = pp->cdr;
+    }
+    return res + " . " + p->toString() + ")";
 }
 
 std::string ASTNode::toString() const

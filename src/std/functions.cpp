@@ -216,4 +216,49 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         {"asin",      math_function("asin", asin)},
         {"acos",      math_function("acos", acos)},
         {"atan",      math_function("atan", atan)},
+        {"cons",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("cons: 2 arguments required");
+            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemePair>(l.front(), l.back()));
+        }
+        },
+        {"car",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            std::shared_ptr<SchemePair> p;
+            if(l.size() != 1 || !(p = std::dynamic_pointer_cast<SchemePair>(l.front())) || p == scheme_nil)
+                throw eval_error("car: pair required");
+            return p->car;
+        }
+        },
+        {"cdr",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            std::shared_ptr<SchemePair> p;
+            if(l.size() != 1 || !(p = std::dynamic_pointer_cast<SchemePair>(l.front())) || p == scheme_nil)
+                throw eval_error("cdr: pair required");
+            return p->cdr;
+        }
+        },
+        {"list",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            std::shared_ptr<SchemePair> p = std::dynamic_pointer_cast<SchemePair>(scheme_nil);
+            for(auto i = l.rbegin(); i != l.rend(); ++i)
+            {
+                p = std::make_shared<SchemePair>(*i, p);
+            }
+            return std::dynamic_pointer_cast<SchemeObject>(p);
+        }
+        },
+        {"null?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("null?: one argument required");
+            return (l.front() == scheme_nil) ? scheme_true : scheme_false;
+        }
+        },
+        {"min",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            return fold(l, 0, [](long long a, long long b) { return std::min(a, b); },
+                        [](double a, double b) { return std::min(a, b); }, true);
+        }
+        },
+        {"max",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            return fold(l, 0, [](long long a, long long b) { return std::max(a, b); },
+                        [](double a, double b) { return std::max(a, b); }, true);
+        }
+        },
 };

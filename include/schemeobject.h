@@ -118,4 +118,13 @@ struct SchemeString: public SchemeObject
     std::string toString() const override;
 };
 
+struct SchemePair: public SchemeObject
+{
+    std::shared_ptr<SchemeObject> car, cdr;
+
+    SchemePair(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b): car(a), cdr(b) {};
+
+    std::string toString() const override;
+};
+
 #endif

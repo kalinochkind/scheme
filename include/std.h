@@ -6,7 +6,7 @@
 #include <functional>
 #include "schemeobject.h"
 
-extern std::shared_ptr<SchemeObject> scheme_true, scheme_false, scheme_empty;
+extern std::shared_ptr<SchemeObject> scheme_true, scheme_false, scheme_empty, scheme_nil;
 
 extern std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         const std::list<std::shared_ptr<ASTNode>> &,
