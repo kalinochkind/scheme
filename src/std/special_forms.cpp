@@ -2,9 +2,9 @@
 #include "std.h"
 #include "eval.h"
 
-std::unordered_map<std::string, std::shared_ptr<SchemeObject> (*)(const std::list<std::shared_ptr<ASTNode>> &,
-                                                                  Context &context,
-                                                                  std::shared_ptr<SchemeFunc> tail_func)> special_forms = {
+std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(const std::list<std::shared_ptr<ASTNode>> &,
+                                                                            Context &context,
+                                                                            std::shared_ptr<SchemeFunc> tail_func)>> special_forms = {
         {"define", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                       std::shared_ptr<SchemeFunc>) {
             if(l.size() < 2)
