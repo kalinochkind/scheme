@@ -47,7 +47,8 @@ math_function(const std::string &name, double (*fun)(double))
 }
 
 static std::shared_ptr<SchemeObject> fold(const std::list<std::shared_ptr<SchemeObject>> &l, long long start,
-                                          long long (*llf)(long long, long long), double (*df)(double, double))
+                                          long long (*llf)(long long, long long), double (*df)(double, double),
+                                          bool start_with_first = false)
 {
     long long n = start;
     double d = start;
@@ -57,6 +58,20 @@ static std::shared_ptr<SchemeObject> fold(const std::list<std::shared_ptr<Scheme
         if(!is_int(i) && !is_float(i))
         {
             throw eval_error(i->toString() + " is not an number");
+        }
+        if(start_with_first)
+        {
+            if(is_float(i))
+            {
+                is_double = true;
+                d = std::dynamic_pointer_cast<SchemeFloat>(i)->value;
+            }
+            else
+            {
+                d = n = std::dynamic_pointer_cast<SchemeInt>(i)->value;
+            }
+            start_with_first = false;
+            continue;
         }
         if(is_float(i))
         {
@@ -88,10 +103,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         }
         },
         {"-",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() > 2)
-                throw eval_error("-: one or two arguments required");
-            return fold(l, 0, [](long long a, long long b) { return -a - b; },
-                        [](double a, double b) { return -a - b; });
+            return fold(l, 0, [](long long a, long long b) { return a - b; },
+                        [](double a, double b) { return a - b; }, l.size() > 1);
         }
         },
         {"*",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
