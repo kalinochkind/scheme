@@ -15,4 +15,9 @@ std::string startup = "(define (> x y) (< y x)) "
         "  (proc (cons a l))) "
         "(define (max a . l)"
         "  (define (proc l) (if (or (null? (cdr l)) (< (proc (cdr l)) (car l))) (car l) (proc (cdr l))))"
-        "  (proc (cons a l))) ";
+        "  (proc (cons a l))) "
+        "(define (map fun . args)"
+        "  (define (cars l) (if (null? l) nil (cons (car (car l)) (cars (cdr l)))))"
+        "  (define (cdrs l) (if (null? l) nil (cons (cdr (car l)) (cdrs (cdr l)))))"
+        "  (define (nils l) (and (not (null? l)) (or (null? (car l)) (nils (cdr l)))))"
+        "  (if (or (null? args) (nils args)) nil (cons (apply fun (cars args)) (apply map fun (cdrs args))))) ";
