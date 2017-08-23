@@ -1,5 +1,17 @@
 #include <vector>
+#include <regex>
 #include "parser.h"
+
+static ast_type_t identifier_type(const std::string &s)
+{
+    static const std::regex float_re("^-?(\\d+\\.\\d*|\\d*\\.\\d+)$");
+    static const std::regex int_re("^-?\\d+$");
+    if(std::regex_match(s, int_re))
+        return ast_type_t::INT;
+    if(std::regex_match(s, float_re))
+        return ast_type_t::FLOAT;
+    return ast_type_t::NAME;
+}
 
 static size_t _parse(const std::string &s, ASTNode &o, size_t i)
 {
@@ -38,30 +50,11 @@ static size_t _parse(const std::string &s, ASTNode &o, size_t i)
             throw unexpected_eol_error("Unclosed list literal");
         return ++i;
     }
-    if(isdigit(s[i]))
-    {
-        o.type = ast_type_t::INT;
-        bool dot = false;
-        while(i < s.length() && (isdigit(s[i]) || s[i] == '.'))
-        {
-            if(s[i] == '.')
-            {
-                if(dot)
-                    throw parse_error("Invalid numeric literal");
-                else
-                    dot = true;
-            }
-            o.value.push_back(s[i++]);
-        }
-        if(dot)
-            o.type = ast_type_t::FLOAT;
-        return i;
-    }
-    o.type = ast_type_t::NAME;
     while(i < s.length() && s[i] != '(' && s[i] != ')' && !isspace(s[i]))
     {
         o.value.push_back(s[i++]);
     }
+    o.type = identifier_type(o.value);
     return i;
 }
 
