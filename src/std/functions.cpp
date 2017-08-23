@@ -247,6 +247,14 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
                 if(p1 && p2)
                     return p1->name == p2->name ? scheme_true : scheme_false;
             }
+            if((is_int(l.front()) || is_float(l.front())) && (is_int(l.back()) || is_float(l.back())))
+                return get_value(l.front(), "") == get_value(l.back(), "") ? scheme_true : scheme_false;
+            {
+                auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
+                auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
+                if(p1 && p2)
+                    return p1->value == p2->value ? scheme_true : scheme_false;
+            }
             return scheme_false;
         }
         }

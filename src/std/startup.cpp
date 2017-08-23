@@ -45,4 +45,6 @@ std::string startup = "(define (> x y) (< y x)) "
         "  (cdr rest)))) (iter initial sequence)) "
         "(define (reverse items)"
         "  (fold-left (lambda (x y) (cons y x)) nil items)) "
-        "(define (null? x) (eq? x nil)) ";
+        "(define (null? x) (eq? x nil)) "
+        "(define (equal? a b)"
+        "  (if (and (pair? a) (pair? b)) (and (equal? (car a) (car b)) (equal? (cdr a) (cdr b))) (eq? a b))) ";
