@@ -35,6 +35,8 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
     std::shared_ptr<SchemeBuiltinFunc> bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
     if(bf)
     {
+        if(special_forms.count(bf->name))
+            throw eval_error(bf->name + " cannot be executed this way");
         if(functions.count(bf->name))
             return functions[bf->name](val_list);
         if(val_list.size() != 1)

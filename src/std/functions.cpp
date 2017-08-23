@@ -217,12 +217,6 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemePair>(l.front(), l.back()));
         }
         },
-        {"null?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("null?: one argument required");
-            return (l.front() == scheme_nil) ? scheme_true : scheme_false;
-        }
-        },
         {"pair?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("pair?: one argument required");
@@ -230,4 +224,30 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return (p && p != scheme_nil) ? scheme_true : scheme_false;
         }
         },
+        {"eq?",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("eq?: 2 arguments required");
+            if(l.front() == l.back())
+                return scheme_true;
+            {
+                auto p1 = std::dynamic_pointer_cast<SchemeName>(l.front());
+                auto p2 = std::dynamic_pointer_cast<SchemeName>(l.back());
+                if(p1 && p2)
+                    return p1->value == p2->value ? scheme_true : scheme_false;
+            }
+            {
+                auto p1 = std::dynamic_pointer_cast<SchemeBool>(l.front());
+                auto p2 = std::dynamic_pointer_cast<SchemeBool>(l.back());
+                if(p1 && p2)
+                    return p1->value == p2->value ? scheme_true : scheme_false;
+            }
+            {
+                auto p1 = std::dynamic_pointer_cast<SchemeBuiltinFunc>(l.front());
+                auto p2 = std::dynamic_pointer_cast<SchemeBuiltinFunc>(l.back());
+                if(p1 && p2)
+                    return p1->name == p2->name ? scheme_true : scheme_false;
+            }
+            return scheme_false;
+        }
+        }
 };

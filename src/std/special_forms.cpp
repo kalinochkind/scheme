@@ -32,6 +32,26 @@ make_function(const std::list<std::shared_ptr<ASTNode>> &l, const Context &conte
     return std::dynamic_pointer_cast<SchemeObject>(f);
 }
 
+static std::shared_ptr<SchemeObject> do_quote(std::shared_ptr<ASTNode> node)
+{
+
+    if(node->type == ast_type_t::STRING || node->type == ast_type_t::INT || node->type == ast_type_t::FLOAT)
+    {
+        Context dummy;
+        return node->evaluate(dummy);
+    }
+    if(node->type == ast_type_t::NAME)
+    {
+        return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeName>(node->value));
+    }
+    auto lst = scheme_nil;
+    for(auto i = node->list.rbegin(); i != node->list.rend(); ++i)
+    {
+        lst = std::make_shared<SchemePair>(do_quote(*i), lst);
+    }
+    return std::dynamic_pointer_cast<SchemeObject>(lst);
+}
+
 std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(const std::list<std::shared_ptr<ASTNode>> &,
                                                                             Context &context,
                                                                             std::shared_ptr<SchemeFunc> tail_func)>> special_forms = {
@@ -159,5 +179,12 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
                 throw tail_call(args);
             return execute_function(f, args);
         }
+        },
+        {"quote",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &,
+                      std::shared_ptr<SchemeFunc>) {
+            if(l.size() != 1)
+                throw eval_error("quote: one argument required");
+            return do_quote(l.front());
         }
+        },
 };

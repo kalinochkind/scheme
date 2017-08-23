@@ -128,4 +128,13 @@ struct SchemePair: public SchemeObject
     std::string toString() const override;
 };
 
+struct SchemeName: public SchemeObject
+{
+    std::string value;
+
+    SchemeName(std::string s): value(s) {};
+
+    std::string toString() const override;
+};
+
 #endif

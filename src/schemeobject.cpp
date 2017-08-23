@@ -67,6 +67,11 @@ std::string SchemePair::toString() const
     return res + " . " + p->toString() + ")";
 }
 
+std::string SchemeName::toString() const
+{
+    return value;
+}
+
 std::string ASTNode::toString() const
 {
     if(type != ast_type_t::LIST)

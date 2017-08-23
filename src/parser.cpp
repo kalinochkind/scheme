@@ -40,7 +40,7 @@ static size_t _parse(const std::string &s, ASTNode &o, size_t i)
         ++i;
         while(i < s.length() && s[i] != ')')
         {
-            auto p = std::make_unique<ASTNode>();
+            auto p = std::make_shared<ASTNode>();
             i = _parse(s, *p, i);
             o.list.push_back(std::move(p));
             while(i < s.length() && isspace(s[i]))
@@ -49,6 +49,17 @@ static size_t _parse(const std::string &s, ASTNode &o, size_t i)
         if(i == s.length())
             throw unexpected_eol_error("Unclosed list literal");
         return ++i;
+    }
+    if(s[i] == '\'')
+    {
+        auto quote = std::make_shared<ASTNode>();
+        quote->type = ast_type_t::NAME;
+        quote->value = "quote";
+        o.type = ast_type_t::LIST;
+        o.list.push_back(quote);
+        auto p = std::make_shared<ASTNode>();
+        o.list.push_back(p);
+        return _parse(s, *p, ++i);
     }
     while(i < s.length() && s[i] != '(' && s[i] != ')' && !isspace(s[i]))
     {
