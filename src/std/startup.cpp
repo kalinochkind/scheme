@@ -27,4 +27,9 @@ std::string startup = "(define (> x y) (< y x)) "
         "  (define (cars l) (if (null? l) nil (cons (car (car l)) (cars (cdr l)))))"
         "  (define (cdrs l) (if (null? l) nil (cons (cdr (car l)) (cdrs (cdr l)))))"
         "  (define (nils l) (and (not (null? l)) (or (null? (car l)) (nils (cdr l)))))"
-        "  (cond ((or (null? args) (nils args)) \"\") (else (apply fun (cars args)) (apply for-each fun (cdrs args))))) ";
+        "  (cond ((or (null? args) (nils args)) \"\") (else (apply fun (cars args)) (apply for-each fun (cdrs args))))) "
+        "(define (length l)"
+        "  (define (length-iter l c) (if (null? l) c (length-iter (cdr l) (+ c 1))))"
+        "  (length-iter l 0)) "
+        "(define (append list1 list2)"
+        "  (if (null? list1) list2 (cons (car list1) (append (cdr list1) list2)))) ";

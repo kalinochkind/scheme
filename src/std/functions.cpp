@@ -217,24 +217,17 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemePair>(l.front(), l.back()));
         }
         },
-        {"car",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            std::shared_ptr<SchemePair> p;
-            if(l.size() != 1 || !(p = std::dynamic_pointer_cast<SchemePair>(l.front())) || p == scheme_nil)
-                throw eval_error("car: pair required");
-            return p->car;
-        }
-        },
-        {"cdr",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            std::shared_ptr<SchemePair> p;
-            if(l.size() != 1 || !(p = std::dynamic_pointer_cast<SchemePair>(l.front())) || p == scheme_nil)
-                throw eval_error("cdr: pair required");
-            return p->cdr;
-        }
-        },
         {"null?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("null?: one argument required");
             return (l.front() == scheme_nil) ? scheme_true : scheme_false;
+        }
+        },
+        {"pair?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("pair?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
+            return (p && p != scheme_nil) ? scheme_true : scheme_false;
         }
         },
 };
