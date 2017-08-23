@@ -14,6 +14,53 @@ std::shared_ptr<SchemeObject> scheme_false = std::make_shared<SchemeBool>(false)
 std::shared_ptr<SchemeObject> scheme_empty = std::make_shared<SchemeString>("");
 std::shared_ptr<SchemeObject> scheme_nil = std::make_shared<SchemePair>(nullptr, nullptr);
 
+std::shared_ptr<SchemeObject>
+execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<SchemeObject>> &val_list)
+{
+    std::shared_ptr<SchemeBuiltinFunc> bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
+    if(bf)
+    {
+        return functions[bf->name](val_list);
+    }
+    Context local_context = f->context;
+    local_context.newFrame();
+    auto pit = f->params.begin();
+    auto lit = val_list.begin();
+    for(; lit != val_list.end() && pit != f->params.end(); ++lit, ++pit)
+    {
+        if(f->arglist && next(pit) == f->params.end())
+        {
+            auto rem = scheme_nil;
+            for(auto rlit = val_list.rbegin(); rlit.base() != lit; ++rlit)
+                rem = std::make_shared<SchemePair>(*rlit, rem);
+            local_context.set(*pit, rem);
+            lit = val_list.end();
+            ++pit;
+            break;
+        }
+        local_context.set(*pit, *lit);
+    }
+    if(f->arglist && next(pit) == f->params.end())
+    {
+        local_context.set(*pit, scheme_nil);
+        ++pit;
+    }
+    if(lit != val_list.end())
+    {
+        throw eval_error("Too many arguments");
+    }
+    if(pit != f->params.end())
+    {
+        throw eval_error("Too few arguments");
+    }
+    std::shared_ptr<SchemeObject> res;
+    for(auto i = f->body.begin(); i != f->body.end(); ++i)
+    {
+        res = i->evaluate(local_context, std::next(i) == f->body.end() ? f : nullptr);
+    }
+    return res;
+}
+
 std::shared_ptr<SchemeObject> ASTNode::evaluate(Context &context, std::shared_ptr<SchemeFunc> tail_func)
 {
     if(type == ast_type_t::INT)
@@ -52,53 +99,13 @@ std::shared_ptr<SchemeObject> ASTNode::evaluate(Context &context, std::shared_pt
     {
         val_list.push_back((*lit)->evaluate(context));
     }
-    if(bf)
-    {
-        return functions[bf->name](val_list);
-    }
     if(f == tail_func)
         throw tail_call(val_list);
     while(true)
     {
         try
         {
-            Context local_context = f->context;
-            local_context.newFrame();
-            auto pit = f->params.begin();
-            auto lit = val_list.begin();
-            for(; lit != val_list.end() && pit != f->params.end(); ++lit, ++pit)
-            {
-                if(f->arglist && next(pit) == f->params.end())
-                {
-                    auto rem = scheme_nil;
-                    for(auto rlit = val_list.rbegin(); rlit.base() != lit; ++rlit)
-                        rem = std::make_shared<SchemePair>(*rlit, rem);
-                    local_context.set(*pit, rem);
-                    lit = val_list.end();
-                    ++pit;
-                    break;
-                }
-                local_context.set(*pit, *lit);
-            }
-            if(f->arglist && next(pit) == f->params.end())
-            {
-                local_context.set(*pit, scheme_nil);
-                ++pit;
-            }
-            if(lit != val_list.end())
-            {
-                throw eval_error("Too many arguments");
-            }
-            if(pit != f->params.end())
-            {
-                throw eval_error("Too few arguments");
-            }
-            std::shared_ptr<SchemeObject> res;
-            for(auto i = f->body.begin(); i != f->body.end(); ++i)
-            {
-                res = i->evaluate(local_context, std::next(i) == f->body.end() ? f : nullptr);
-            }
-            return res;
+            return execute_function(f, val_list);
         }
         catch(tail_call &e)
         {
