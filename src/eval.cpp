@@ -2,12 +2,6 @@
 #include "std.h"
 #include <iostream>
 
-struct tail_call
-{
-    std::list<std::shared_ptr<SchemeObject>> list;
-
-    tail_call(std::list<std::shared_ptr<SchemeObject>> l): list(std::move(l)) {};
-};
 
 std::shared_ptr<SchemeObject> scheme_true = std::make_shared<SchemeBool>(true);
 std::shared_ptr<SchemeObject> scheme_false = std::make_shared<SchemeBool>(false);

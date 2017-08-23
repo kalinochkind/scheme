@@ -22,4 +22,9 @@ std::string startup = "(define (> x y) (< y x)) "
         "  (define (cars l) (if (null? l) nil (cons (car (car l)) (cars (cdr l)))))"
         "  (define (cdrs l) (if (null? l) nil (cons (cdr (car l)) (cdrs (cdr l)))))"
         "  (define (nils l) (and (not (null? l)) (or (null? (car l)) (nils (cdr l)))))"
-        "  (if (or (null? args) (nils args)) nil (cons (apply fun (cars args)) (apply map fun (cdrs args))))) ";
+        "  (if (or (null? args) (nils args)) nil (cons (apply fun (cars args)) (apply map fun (cdrs args))))) "
+        "(define (for-each fun . args)"
+        "  (define (cars l) (if (null? l) nil (cons (car (car l)) (cars (cdr l)))))"
+        "  (define (cdrs l) (if (null? l) nil (cons (cdr (car l)) (cdrs (cdr l)))))"
+        "  (define (nils l) (and (not (null? l)) (or (null? (car l)) (nils (cdr l)))))"
+        "  (cond ((or (null? args) (nils args)) \"\") (else (apply fun (cars args)) (apply for-each fun (cdrs args))))) ";

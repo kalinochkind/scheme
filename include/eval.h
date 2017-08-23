@@ -16,4 +16,11 @@ extern std::chrono::milliseconds start_time;
 std::shared_ptr<SchemeObject>
 execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<SchemeObject>> &val_list);
 
+struct tail_call
+{
+    std::list<std::shared_ptr<SchemeObject>> list;
+
+    tail_call(std::list<std::shared_ptr<SchemeObject>> l): list(std::move(l)) {};
+};
+
 #endif //SCHEME_EVAL_H

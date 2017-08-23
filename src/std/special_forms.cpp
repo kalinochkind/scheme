@@ -139,4 +139,25 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return scheme_false;
         }
         },
+        {"apply",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                      std::shared_ptr<SchemeFunc> tail_func) {
+            if(l.size() < 2)
+                throw eval_error("apply: function and list of arguments required");
+            auto f = std::dynamic_pointer_cast<SchemeFunc>(l.front()->evaluate(context));
+            auto tail = std::dynamic_pointer_cast<SchemePair>(l.back()->evaluate(context));
+            if(!f || !tail)
+                throw eval_error("apply: function and list of arguments required");
+            std::list<std::shared_ptr<SchemeObject>> args;
+            for(auto i = next(l.begin()); next(i) != l.end(); ++i)
+                args.push_back((*i)->evaluate(context));
+            while(tail && tail != scheme_nil)
+            {
+                args.push_back(tail->car);
+                tail = std::dynamic_pointer_cast<SchemePair>(tail->cdr);
+            }
+            if(f == tail_func)
+                throw tail_call(args);
+            return execute_function(f, args);
+        }
+        }
 };
