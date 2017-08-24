@@ -1,4 +1,4 @@
-#include <std.h>
+#include <set>
 #include "schemeobject.h"
 #include "std.h"
 
@@ -57,12 +57,16 @@ std::string SchemePair::toString() const
     std::string res = "(" + car->toString();
     std::shared_ptr<SchemeObject> p = cdr;
     std::shared_ptr<SchemePair> pp;
+    std::set<const SchemePair *> visited{this};
     while((pp = std::dynamic_pointer_cast<SchemePair>(p)))
     {
         if(p == scheme_nil)
             return res + ")";
         res += " " + pp->car->toString();
+        if(visited.count(pp.get()))
+            return res + " ...)";
         p = pp->cdr;
+        visited.insert(pp.get());
     }
     return res + " . " + p->toString() + ")";
 }

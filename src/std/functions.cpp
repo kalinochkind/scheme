@@ -272,4 +272,24 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return is_int(l.front()) || is_float(l.front()) ? scheme_true : scheme_false;
         }
         },
+        {"set-car!",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("set-car!: 2 arguments required");
+            auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
+            if(!p || p == scheme_nil)
+                throw eval_error("set-car!: a pair required");
+            p->car = l.back();
+            return l.front();
+        }
+        },
+        {"set-cdr!",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("set-cdr!: 2 arguments required");
+            auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
+            if(!p || p == scheme_nil)
+                throw eval_error("set-cdr!: a pair required");
+            p->cdr = l.back();
+            return l.front();
+        }
+        },
 };
