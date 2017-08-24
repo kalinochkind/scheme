@@ -210,8 +210,18 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         {"tan",       math_function("tan", tan)},
         {"asin",      math_function("asin", asin)},
         {"acos",      math_function("acos", acos)},
-        {"atan",      math_function("atan", atan)},
         {"sqrt",      math_function("sqrt", sqrt)},
+        {"atan",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() < 1 || l.size() > 2)
+                throw eval_error("atan: one or two numbers required");
+            double res, arg = get_value(l.front(), "atan: number required");
+            if(l.size() == 1)
+                res = atan(arg);
+            else
+                res = atan2(arg, get_value(l.back(), "atan: number required"));
+            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(res));
+        }
+        },
         {"cons",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("cons: 2 arguments required");
