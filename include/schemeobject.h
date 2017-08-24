@@ -24,7 +24,9 @@ struct Context
 
     std::shared_ptr<SchemeObject> get(const std::string &name) const;
 
-    void set(const std::string name, std::shared_ptr<SchemeObject> value);
+    void set(const std::string &name, std::shared_ptr<SchemeObject> value);
+
+    void assign(const std::string &name, std::shared_ptr<SchemeObject> value);
 
     void newFrame();
 

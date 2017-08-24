@@ -1,6 +1,8 @@
 #include <string>
 
 std::string startup = "(define (> x y) (< y x)) "
+        "(define (>= x y) (not (< x y))) "
+        "(define (<= x y) (not (< y x))) "
         "(define true (< 0 1)) "
         "(define false (< 1 0)) "
         "(define (not x) (if x false true)) "
@@ -48,4 +50,5 @@ std::string startup = "(define (> x y) (< y x)) "
         "(define (null? x) (eq? x nil)) "
         "(define (equal? a b)"
         "  (if (and (pair? a) (pair? b)) (and (equal? (car a) (car b)) (equal? (cdr a) (cdr b))) (eq? a b))) "
-        "(define quotient /) ";
+        "(define quotient /) "
+        "(define (gcd a b) (if (= b 0) a (gcd b (remainder a b)))) ";

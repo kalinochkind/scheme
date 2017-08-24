@@ -211,6 +211,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         {"asin",      math_function("asin", asin)},
         {"acos",      math_function("acos", acos)},
         {"atan",      math_function("atan", atan)},
+        {"sqrt",      math_function("sqrt", sqrt)},
         {"cons",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("cons: 2 arguments required");
@@ -258,14 +259,14 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return scheme_false;
         }
         },
-        {"symbol?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"symbol?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("symbol?: one argument required");
             auto p = std::dynamic_pointer_cast<SchemeName>(l.front());
             return p ? scheme_true : scheme_false;
         }
         },
-        {"number?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"number?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("number?: one argument required");
             return is_int(l.front()) || is_float(l.front()) ? scheme_true : scheme_false;

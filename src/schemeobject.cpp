@@ -97,9 +97,22 @@ std::shared_ptr<SchemeObject> Context::get(const std::string &name) const
     return nullptr;
 }
 
-void Context::set(const std::string name, std::shared_ptr<SchemeObject> value)
+void Context::set(const std::string &name, std::shared_ptr<SchemeObject> value)
 {
     (*(locals.back()))[name] = value;
+}
+
+void Context::assign(const std::string &name, std::shared_ptr<SchemeObject> value)
+{
+    for(auto i = locals.rbegin(); i != locals.rend(); ++i)
+    {
+        if((*i)->count(name))
+        {
+            (**i)[name] = value;
+            return;
+        }
+    }
+    (*locals.front())[name] = value;
 }
 
 void Context::newFrame()

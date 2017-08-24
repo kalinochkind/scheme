@@ -187,4 +187,25 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return do_quote(l.front());
         }
         },
+        {"set!",   [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                      std::shared_ptr<SchemeFunc>) {
+            if(l.size() != 2 || l.front()->type != ast_type_t::NAME)
+                throw eval_error("set!: name and value required");
+            auto res = l.back()->evaluate(context);
+            context.assign(l.front()->value, res);
+            return res;
+        }
+        },
+        {"begin",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                      std::shared_ptr<SchemeFunc> tail_func) {
+            if(!l.size())
+                throw eval_error("begin: at least one argument required");
+            std::shared_ptr<SchemeObject> res;
+            for(auto i = l.begin(); i != l.end(); ++i)
+            {
+                res = (*i)->evaluate(context, next(i) == l.end() ? tail_func : nullptr);
+            }
+            return res;
+        }
+        },
 };
