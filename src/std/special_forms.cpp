@@ -52,11 +52,19 @@ static std::shared_ptr<SchemeObject> do_quote(std::shared_ptr<ASTNode> node)
     return std::dynamic_pointer_cast<SchemeObject>(lst);
 }
 
+static std::shared_ptr<SchemeObject> make_promise(std::shared_ptr<ASTNode> body, Context &context)
+{
+    auto f = std::make_shared<SchemeFunc>();
+    f->context = context;
+    f->body = {*body};
+    return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemePromise>(f));
+}
+
 std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(const std::list<std::shared_ptr<ASTNode>> &,
                                                                             Context &context,
                                                                             std::shared_ptr<SchemeFunc> tail_func)>> special_forms = {
-        {"define", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc>) {
+        {"define",      [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc>) {
             if(l.size() < 2)
                 throw eval_error("define: at least 2 arguments required");
             if(l.front()->type == ast_type_t::NAME)
@@ -77,13 +85,13 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
                 throw eval_error("define: invalid arguments");
         }
         },
-        {"lambda", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc>) {
+        {"lambda",      [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc>) {
             return make_function(l, context, "lambda");
         }
         },
-        {"let",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc> tail_func) {
+        {"let",         [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc> tail_func) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
                 throw eval_error("let: parameters and code required");
             auto pl = l.front()->list;
@@ -103,8 +111,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return res;
         }
         },
-        {"cond",   [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc> tail_func) {
+        {"cond",        [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc> tail_func) {
             for(auto branch : l)
             {
                 if(branch->type != ast_type_t::LIST || branch->list.size() < 2)
@@ -123,8 +131,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return scheme_empty;
         }
         },
-        {"if",     [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc> tail_func) {
+        {"if",          [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc> tail_func) {
             if(l.size() > 3 || l.size() < 2)
                 throw eval_error("if: 2 or 3 arguments required");
             if(l.front()->evaluate(context)->toBool())
@@ -135,8 +143,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
                 return scheme_empty;
         }
         },
-        {"and",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc> tail_func) {
+        {"and",         [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc> tail_func) {
             if(l.empty())
                 throw eval_error("and: non-empty list required");
             std::shared_ptr<SchemeObject> res;
@@ -148,8 +156,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return res;
         }
         },
-        {"or",     [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc> tail_func) {
+        {"or",          [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc> tail_func) {
             std::shared_ptr<SchemeObject> res;
             for(auto i = l.begin(); i != l.end(); ++i)
             {
@@ -159,8 +167,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return scheme_false;
         }
         },
-        {"apply",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc> tail_func) {
+        {"apply",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc> tail_func) {
             if(l.size() < 2)
                 throw eval_error("apply: function and list of arguments required");
             auto f = std::dynamic_pointer_cast<SchemeFunc>(l.front()->evaluate(context));
@@ -180,15 +188,15 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return execute_function(f, args);
         }
         },
-        {"quote",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &,
-                      std::shared_ptr<SchemeFunc>) {
+        {"quote",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &,
+                           std::shared_ptr<SchemeFunc>) {
             if(l.size() != 1)
                 throw eval_error("quote: one argument required");
             return do_quote(l.front());
         }
         },
-        {"set!",   [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc>) {
+        {"set!",        [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc>) {
             if(l.size() != 2 || l.front()->type != ast_type_t::NAME)
                 throw eval_error("set!: name and value required");
             auto res = l.back()->evaluate(context);
@@ -196,8 +204,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return res;
         }
         },
-        {"begin",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc> tail_func) {
+        {"begin",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc> tail_func) {
             if(!l.size())
                 throw eval_error("begin: at least one argument required");
             std::shared_ptr<SchemeObject> res;
@@ -208,14 +216,19 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return res;
         }
         },
-        {"delay",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                      std::shared_ptr<SchemeFunc>) {
+        {"delay",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc>) {
             if(l.size() != 1)
                 throw eval_error("delay: one argument required");
-            auto f = std::make_shared<SchemeFunc>();
-            f->context = context;
-            f->body = {*l.front()};
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemePromise>(f));
+            return make_promise(l.front(), context);
+        }
+        },
+        {"cons-stream", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc>) {
+            if(l.size() != 2)
+                throw eval_error("cons-stream: two arguments required");
+            return std::dynamic_pointer_cast<SchemeObject>(
+                    std::make_shared<SchemePair>(l.front()->evaluate(context), make_promise(l.back(), context)));
         }
         },
 };

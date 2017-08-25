@@ -79,10 +79,7 @@ std::string SchemeName::toString() const
 
 std::string SchemePromise::toString() const
 {
-    if(value)
-        return "<promise: " + value->toString() + ">";
-    else
-        return "<promise>";
+    return "<promise>";
 }
 
 std::shared_ptr<SchemeObject> SchemePromise::force()
