@@ -1,6 +1,7 @@
 #include <set>
 #include "schemeobject.h"
 #include "std.h"
+#include "eval.h"
 
 std::string SchemeInt::toString() const
 {
@@ -73,6 +74,24 @@ std::string SchemePair::toString() const
 
 std::string SchemeName::toString() const
 {
+    return value;
+}
+
+std::string SchemePromise::toString() const
+{
+    if(value)
+        return "<promise: " + value->toString() + ">";
+    else
+        return "<promise>";
+}
+
+std::shared_ptr<SchemeObject> SchemePromise::force()
+{
+    if(!value)
+    {
+        value = execute_function(func, {});
+        func.reset();
+    }
     return value;
 }
 

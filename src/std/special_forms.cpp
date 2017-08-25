@@ -208,4 +208,14 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return res;
         }
         },
+        {"delay",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                      std::shared_ptr<SchemeFunc>) {
+            if(l.size() != 1)
+                throw eval_error("delay: one argument required");
+            auto f = std::make_shared<SchemeFunc>();
+            f->context = context;
+            f->body = {*l.front()};
+            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemePromise>(f));
+        }
+        },
 };

@@ -139,4 +139,16 @@ struct SchemeName: public SchemeObject
     std::string toString() const override;
 };
 
+struct SchemePromise: public SchemeObject
+{
+    std::shared_ptr<SchemeObject> value;
+    std::shared_ptr<SchemeFunc> func;
+
+    SchemePromise(std::shared_ptr<SchemeFunc> f): value(nullptr), func(f) {};
+
+    std::string toString() const override;
+
+    std::shared_ptr<SchemeObject> force();
+};
+
 #endif
