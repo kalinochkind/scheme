@@ -276,6 +276,13 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return p ? scheme_true : scheme_false;
         }
         },
+        {"string?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("string?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemeString>(l.front());
+            return p ? scheme_true : scheme_false;
+        }
+        },
         {"number?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("number?: one argument required");

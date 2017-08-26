@@ -111,15 +111,55 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return res;
         }
         },
+        {"let*",        [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                           std::shared_ptr<SchemeFunc> tail_func) {
+            if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
+                throw eval_error("let*: parameters and code required");
+            auto pl = l.front()->list;
+            Context local_context = context;
+            for(auto i : pl)
+            {
+                if(i->type != ast_type_t::LIST || i->list.size() != 2 || i->list.front()->type != ast_type_t::NAME)
+                    throw eval_error("let*: list of (name value) required");
+                auto value = (*next(i->list.begin()))->evaluate(local_context);
+                local_context.newFrame();
+                local_context.set(i->list.front()->value, value);
+            }
+            std::shared_ptr<SchemeObject> res;
+            for(auto i = next(l.begin()); i != l.end(); ++i)
+            {
+                res = (*i)->evaluate(local_context, next(i) == l.end() ? tail_func : nullptr);
+            }
+            return res;
+        }
+        },
         {"cond",        [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                            std::shared_ptr<SchemeFunc> tail_func) {
             for(auto branch : l)
             {
-                if(branch->type != ast_type_t::LIST || branch->list.size() < 2)
-                    throw eval_error("cond: lists with length at least 2 required");
+                if(branch->type != ast_type_t::LIST || branch->list.size() < 1)
+                    throw eval_error("cond: non-empty lists required");
+                std::shared_ptr<SchemeObject> br;
                 if((branch->list.front()->type == ast_type_t::NAME && branch->list.front()->value == "else") ||
-                   branch->list.front()->evaluate(context)->toBool())
+                   (br = branch->list.front()->evaluate(context))->toBool())
                 {
+                    if(branch->list.size() == 1)
+                    {
+                        if(branch->list.front()->type == ast_type_t::NAME && branch->list.front()->value == "else")
+                            throw eval_error("cond: else branch has no expressions");
+                        return br;
+                    }
+                    if(branch->list.size() == 3 && ((*next(branch->list.begin()))->type == ast_type_t::NAME &&
+                                                    (*next(branch->list.begin()))->value == "=>"))
+                    {
+                        auto func = std::dynamic_pointer_cast<SchemeFunc>(branch->list.back()->evaluate(context));
+                        if(!func)
+                            throw eval_error("cond: => requires a function");
+                        std::list<std::shared_ptr<SchemeObject>> args{br};
+                        if(func == tail_func)
+                            throw tail_call(args);
+                        return execute_function(func, args);
+                    }
                     std::shared_ptr<SchemeObject> res;
                     for(auto i = next(branch->list.begin()); i != branch->list.end(); ++i)
                     {
