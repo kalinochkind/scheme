@@ -92,9 +92,21 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
         },
         {"let",         [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                            std::shared_ptr<SchemeFunc> tail_func) {
-            if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
+            if(l.size() < 2)
                 throw eval_error("let: parameters and code required");
-            auto pl = l.front()->list;
+            std::list<std::shared_ptr<ASTNode>> pl;
+            std::string name;
+            if(l.front()->type == ast_type_t::NAME)
+            {
+                name = l.front()->value;
+                pl = (*next(l.begin()))->list;
+                if(l.size() < 3)
+                    throw eval_error("let: parameters and code required");
+            }
+            else if(l.front()->type == ast_type_t::LIST)
+                pl = l.front()->list;
+            else
+                throw eval_error("let: invalid argument");
             Context local_context = context;
             local_context.newFrame();
             for(auto i : pl)
@@ -103,10 +115,30 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
                     throw eval_error("let: list of (name value) required");
                 local_context.set(i->list.front()->value, (*next(i->list.begin()))->evaluate(context));
             }
-            std::shared_ptr<SchemeObject> res;
-            for(auto i = next(l.begin()); i != l.end(); ++i)
+            if(name.empty())
             {
-                res = (*i)->evaluate(local_context, next(i) == l.end() ? tail_func : nullptr);
+                std::shared_ptr<SchemeObject> res;
+                for(auto i = next(l.begin()); i != l.end(); ++i)
+                {
+                    res = (*i)->evaluate(local_context, next(i) == l.end() ? tail_func : nullptr);
+                }
+                return res;
+            }
+            auto f = std::make_shared<SchemeFunc>();
+            f->context = local_context;
+            for(auto i = next(next(l.begin())); i != l.end(); ++i)
+            {
+                f->body.push_back(**i);
+            }
+            for(auto i : pl)
+            {
+                f->params.push_back(i->list.front()->value);
+            }
+            local_context.set(name, f);
+            std::shared_ptr<SchemeObject> res;
+            for(auto i = f->body.begin(); i != f->body.end(); ++i)
+            {
+                res = i->evaluate(local_context, std::next(i) == f->body.end() ? tail_func : nullptr);
             }
             return res;
         }
