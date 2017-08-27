@@ -13,13 +13,34 @@ static ast_type_t identifier_type(const std::string &s)
     return ast_type_t::NAME;
 }
 
+static int skip_whitespace(std::istream &is)
+{
+    int c;
+    while(true)
+    {
+        c = is.peek();
+        while(c != EOF && isspace(c))
+        {
+            is.get();
+            c = is.peek();
+        }
+        if(c == ';')
+        {
+            while(c != EOF && c != '\n')
+            {
+                c = is.get();
+            }
+        }
+        else
+            return c;
+    }
+}
+
 std::shared_ptr<ASTNode> readObject(std::istream &is)
 {
     auto o = std::make_shared<ASTNode>();
-    int c;
-    c = is.get();
-    while(isspace(c) && c != EOF)
-        c = is.get();
+    skip_whitespace(is);
+    int c = is.get();
     if(c == EOF)
         throw end_of_input("");
     if(c == ')')
@@ -40,16 +61,12 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
     if(c == '(')
     {
         o->type = ast_type_t::LIST;
+        skip_whitespace(is);
         c = is.peek();
         while(c != EOF && c != ')')
         {
             o->list.push_back(readObject(is));
-            c = is.peek();
-            while(c != EOF && isspace(c))
-            {
-                is.get();
-                c = is.peek();
-            }
+            c = skip_whitespace(is);
         }
         if(c == EOF)
             throw parse_error("Unclosed list literal");
