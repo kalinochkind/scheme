@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
-#include <eval.h>
+#include <sstream>
+#include "eval.h"
 #include "parser.h"
 #include "std.h"
 
@@ -14,50 +15,43 @@ int main()
     std::string s;
     Context global_context;
     global_context.newFrame();
-    std::vector<ASTNode> x = parseString(startup);
-    for(auto &&i : x)
+    std::istringstream st;
+    st.str(startup);
+    std::shared_ptr<ASTNode> x;
+    while(1)
     {
-        i.evaluate(global_context);
+        try
+        {
+            x = readObject(st);
+            x->evaluate(global_context);
+        }
+        catch(end_of_input)
+        {
+            break;
+        }
     }
     while(true)
     {
-        std::getline(std::cin, s);
-        if(std::cin.eof())
-            break;
         try
         {
-            while(true)
-            {
-                try
-                {
-                    x = parseString(s);
-                    break;
-                }
-                catch(unexpected_eol_error &e)
-                {
-                    std::string t;
-                    std::getline(std::cin, t);
-                    if(std::cin.eof())
-                        break;
-                    s += "\n" + t;
-                }
-            }
+            x = readObject(std::cin);
+        }
+        catch(end_of_input)
+        {
+            break;
         }
         catch(parse_error &e)
         {
             std::cerr << "Parse error: " << e.what() << std::endl;
             continue;
         }
-        for(auto &&i : x)
+        try
         {
-            try
-            {
-                std::cout << i.evaluate(global_context)->toString() << '\n';
-            }
-            catch(eval_error &e)
-            {
-                std::cerr << "Eval error: " << e.what() << std::endl;
-            }
+            std::cout << x->evaluate(global_context)->toString() << '\n';
+        }
+        catch(eval_error &e)
+        {
+            std::cerr << "Eval error: " << e.what() << std::endl;
         }
     }
     return 0;

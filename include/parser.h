@@ -2,19 +2,19 @@
 #define SCHEME_PARSER_H
 
 #include "schemeobject.h"
-#include <vector>
-#include <string>
+#include <iostream>
+#include <memory>
 
 class parse_error: public std::runtime_error
 {
     using std::runtime_error::runtime_error;
 };
 
-class unexpected_eol_error: public parse_error
+class end_of_input: public parse_error
 {
     using parse_error::parse_error;
 };
 
-std::vector<ASTNode> parseString(const std::string &s);
+std::shared_ptr<ASTNode> readObject(std::istream &is);
 
 #endif //SCHEME_PARSER_H

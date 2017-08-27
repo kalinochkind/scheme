@@ -1,5 +1,5 @@
-#include <vector>
 #include <regex>
+#include <string>
 #include "parser.h"
 
 static ast_type_t identifier_type(const std::string &s)
@@ -13,73 +13,67 @@ static ast_type_t identifier_type(const std::string &s)
     return ast_type_t::NAME;
 }
 
-static size_t _parse(const std::string &s, ASTNode &o, size_t i)
+std::shared_ptr<ASTNode> readObject(std::istream &is)
 {
-    while(i < s.length() && isspace(s[i]))
-        ++i;
-    if(i == s.length())
-        return 0;
-    if(s[i] == ')')
+    auto o = std::make_shared<ASTNode>();
+    int c;
+    c = is.get();
+    while(isspace(c) && c != EOF)
+        c = is.get();
+    if(c == EOF)
+        throw end_of_input("");
+    if(c == ')')
         throw parse_error("Invalid syntax");
-    if(s[i] == '"')
+    if(c == '"')
     {
-        o.type = ast_type_t::STRING;
-        ++i;
-        while(i < s.length() && s[i] != '"')
+        o->type = ast_type_t::STRING;
+        c = is.get();
+        while(c != EOF && c != '"')
         {
-            o.value.push_back(s[i]);
-            ++i;
+            o->value.push_back(c);
+            c = is.get();
         }
-        if(i >= s.length())
+        if(c == EOF)
             throw parse_error("Unclosed string literal");
-        return ++i;
+        return o;
     }
-    if(s[i] == '(')
+    if(c == '(')
     {
-        o.type = ast_type_t::LIST;
-        ++i;
-        while(i < s.length() && s[i] != ')')
+        o->type = ast_type_t::LIST;
+        c = is.peek();
+        while(c != EOF && c != ')')
         {
-            auto p = std::make_shared<ASTNode>();
-            i = _parse(s, *p, i);
-            o.list.push_back(std::move(p));
-            while(i < s.length() && isspace(s[i]))
-                ++i;
+            o->list.push_back(readObject(is));
+            c = is.peek();
+            while(c != EOF && isspace(c))
+            {
+                is.get();
+                c = is.peek();
+            }
         }
-        if(i == s.length())
-            throw unexpected_eol_error("Unclosed list literal");
-        return ++i;
+        if(c == EOF)
+            throw parse_error("Unclosed list literal");
+        is.get();
+        return o;
     }
-    if(s[i] == '\'')
+    if(c == '\'')
     {
         auto quote = std::make_shared<ASTNode>();
         quote->type = ast_type_t::NAME;
         quote->value = "quote";
-        o.type = ast_type_t::LIST;
-        o.list.push_back(quote);
-        auto p = std::make_shared<ASTNode>();
-        o.list.push_back(p);
-        return _parse(s, *p, ++i);
+        o->type = ast_type_t::LIST;
+        o->list.push_back(quote);
+        o->list.push_back(readObject(is));
+        return o;
     }
-    while(i < s.length() && s[i] != '(' && s[i] != ')' && !isspace(s[i]))
+    o->value.push_back(c);
+    c = is.peek();
+    while(c != EOF && c != '(' && c != ')' && !isspace(c))
     {
-        o.value.push_back(s[i++]);
+        o->value.push_back(c);
+        is.get();
+        c = is.peek();
     }
-    o.type = identifier_type(o.value);
-    return i;
-}
-
-
-std::vector<ASTNode> parseString(const std::string &s)
-{
-    size_t i = 0;
-    std::vector<ASTNode> res;
-    do
-    {
-        ASTNode o;
-        i = _parse(s, o, i);
-        if(i)
-            res.push_back(std::move(o));
-    } while(i);
-    return res;
+    o->type = identifier_type(o->value);
+    return o;
 }
