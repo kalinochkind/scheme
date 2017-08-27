@@ -1,6 +1,8 @@
 #include <list>
+#include <iostream>
 #include "std.h"
 #include "eval.h"
+#include "parser.h"
 
 static std::shared_ptr<SchemeObject>
 make_function(const std::list<std::shared_ptr<ASTNode>> &l, const Context &context, const std::string &form)
@@ -301,6 +303,18 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
                 throw eval_error("cons-stream: two arguments required");
             return std::dynamic_pointer_cast<SchemeObject>(
                     std::make_shared<SchemePair>(l.front()->evaluate(context), make_promise(l.back(), context)));
+        }
+        },
+        {"read",        [](const std::list<std::shared_ptr<ASTNode>> &, Context &,
+                           std::shared_ptr<SchemeFunc>) {
+            try
+            {
+                return do_quote(readObject(std::cin));
+            }
+            catch(end_of_input)
+            {
+                return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeName>("eof"));
+            }
         }
         },
 };
