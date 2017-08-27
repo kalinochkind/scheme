@@ -30,6 +30,7 @@ int main()
             break;
         }
     }
+    global_context.newFrame();
     while(true)
     {
         try
