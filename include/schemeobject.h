@@ -151,4 +151,13 @@ struct SchemePromise: public SchemeObject
     std::shared_ptr<SchemeObject> force();
 };
 
+struct SchemeEnvironment: public SchemeObject
+{
+    Context context;
+
+    SchemeEnvironment(const Context &c): context(c) {};
+
+    std::string toString() const override;
+};
+
 #endif

@@ -67,4 +67,5 @@ std::string startup = "(define (> x y) (< y x)) "
         "  (define (nils l) (and (not (null? l)) (or (stream-null? (car l)) (nils (cdr l)))))"
         "  (if (or (null? args) (nils args)) the-empty-stream (cons-stream (apply fun (cars args)) (apply stream-map fun (cdrs args))))) "
         "(define (stream-ref stream k) (if (= k 0) (stream-car stream) (stream-ref (stream-cdr stream) (- k 1)))) "
-        "(define (stream-head stream k) (if (= k 0) nil (cons (stream-car stream) (stream-head (stream-cdr stream) (- k 1))))) ";
+        "(define (stream-head stream k) (if (= k 0) nil (cons (stream-car stream) (stream-head (stream-cdr stream) (- k 1))))) "
+        "(define system-global-environment (the-environment))";

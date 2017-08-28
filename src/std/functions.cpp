@@ -94,24 +94,70 @@ static std::shared_ptr<SchemeObject> fold(const std::list<std::shared_ptr<Scheme
         return std::make_shared<SchemeInt>(n);
 }
 
+std::shared_ptr<ASTNode> do_unquote(std::shared_ptr<SchemeObject> o)
+{
+    auto a = std::make_shared<ASTNode>();
+    if(is_int(o))
+    {
+        a->type = ast_type_t::INT;
+        a->value = std::to_string(get_int(o, ""));
+        return a;
+    }
+    if(is_float(o))
+    {
+        a->type = ast_type_t::FLOAT;
+        a->value = std::to_string(get_value(o, ""));
+        return a;
+    }
+    auto pn = std::dynamic_pointer_cast<SchemeName>(o);
+    if(pn)
+    {
+        a->type = ast_type_t::NAME;
+        a->value = pn->value;
+        return a;
+    }
+    auto ps = std::dynamic_pointer_cast<SchemeString>(o);
+    if(ps)
+    {
+        a->type = ast_type_t::STRING;
+        a->value = ps->value;
+        return a;
+    }
+    auto pp = std::dynamic_pointer_cast<SchemePair>(o);
+    if(!pp)
+    {
+        throw eval_error("Cannot evaluate " + o->toString());
+    }
+    while(pp && pp != scheme_nil)
+    {
+        a->list.push_back(do_unquote(pp->car));
+        pp = std::dynamic_pointer_cast<SchemePair>(pp->cdr);
+    }
+    if(!pp)
+    {
+        throw eval_error("Cannot evaluate " + o->toString());
+    }
+    return a;
+}
+
 
 std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         const std::list<std::shared_ptr<SchemeObject>> &)>> functions = {
-        {"+",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"+",            [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return fold(l, 0, [](long long a, long long b) { return a + b; },
                         [](double a, double b) { return a + b; });
         }
         },
-        {"-",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"-",            [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return fold(l, 0, [](long long a, long long b) { return a - b; },
                         [](double a, double b) { return a - b; }, l.size() > 1);
         }
         },
-        {"*",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"*",            [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return fold(l, 1, [](long long a, long long b) { return a * b; }, [](double a, double b) { return a * b; });
         }
         },
-        {"/",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"/",            [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("/: two arguments required");
             auto ap = l.front();
@@ -131,7 +177,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(a / b));
         }
         },
-        {"remainder", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"remainder",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("remainder: two arguments required");
             auto a = l.front();
@@ -145,7 +191,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(x % y));
         }
         },
-        {"random",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"random",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("random: an integer required");
             long long max = get_int(l.front(), "random: an integer required");
@@ -153,7 +199,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(res));
         }
         },
-        {"<",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"<",            [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("<: two arguments required");
             if(get_value(l.front(), "<: numbers required") <
@@ -163,7 +209,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
                 return scheme_false;
         }
         },
-        {"=",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"=",            [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("=: two arguments required");
             if(get_value(l.front(), "=: numbers required") ==
@@ -173,7 +219,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
                 return scheme_false;
         }
         },
-        {"random",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"random",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("random: an integer required");
             long long max = get_int(l.front(), "random: an integer required");
@@ -181,19 +227,19 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(res));
         }
         },
-        {"display",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"display",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("display: one argument required");
             std::cout << l.front()->toString();
             return scheme_empty;
         }
         },
-        {"runtime",   [](const std::list<std::shared_ptr<SchemeObject>> &) {
+        {"runtime",      [](const std::list<std::shared_ptr<SchemeObject>> &) {
             return std::dynamic_pointer_cast<SchemeObject>(
                     std::make_shared<SchemeInt>((get_current_time() - start_time).count()));
         }
         },
-        {"error",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"error",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             std::string res = "error: ";
             for(auto i : l)
             {
@@ -203,15 +249,15 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return scheme_empty;
         }
         },
-        {"sin",       math_function("sin", sin)},
-        {"cos",       math_function("cos", cos)},
-        {"exp",       math_function("exp", exp)},
-        {"log",       math_function("log", log)},
-        {"tan",       math_function("tan", tan)},
-        {"asin",      math_function("asin", asin)},
-        {"acos",      math_function("acos", acos)},
-        {"sqrt",      math_function("sqrt", sqrt)},
-        {"atan",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"sin",          math_function("sin", sin)},
+        {"cos",          math_function("cos", cos)},
+        {"exp",          math_function("exp", exp)},
+        {"log",          math_function("log", log)},
+        {"tan",          math_function("tan", tan)},
+        {"asin",         math_function("asin", asin)},
+        {"acos",         math_function("acos", acos)},
+        {"sqrt",         math_function("sqrt", sqrt)},
+        {"atan",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() < 1 || l.size() > 2)
                 throw eval_error("atan: one or two numbers required");
             double res, arg = get_value(l.front(), "atan: number required");
@@ -222,20 +268,20 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(res));
         }
         },
-        {"cons",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"cons",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("cons: 2 arguments required");
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemePair>(l.front(), l.back()));
         }
         },
-        {"pair?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"pair?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("pair?: one argument required");
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
             return (p && p != scheme_nil) ? scheme_true : scheme_false;
         }
         },
-        {"eq?",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"eq?",          [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("eq?: 2 arguments required");
             if(l.front() == l.back())
@@ -269,27 +315,27 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return scheme_false;
         }
         },
-        {"symbol?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"symbol?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("symbol?: one argument required");
             auto p = std::dynamic_pointer_cast<SchemeName>(l.front());
             return p ? scheme_true : scheme_false;
         }
         },
-        {"string?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"string?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("string?: one argument required");
             auto p = std::dynamic_pointer_cast<SchemeString>(l.front());
             return p ? scheme_true : scheme_false;
         }
         },
-        {"number?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"number?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("number?: one argument required");
             return is_int(l.front()) || is_float(l.front()) ? scheme_true : scheme_false;
         }
         },
-        {"set-car!",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"set-car!",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("set-car!: 2 arguments required");
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
@@ -299,7 +345,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return l.front();
         }
         },
-        {"set-cdr!",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"set-cdr!",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("set-cdr!: 2 arguments required");
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
@@ -309,7 +355,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
             return l.front();
         }
         },
-        {"force",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"force",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("force: one argument required");
             auto t = std::dynamic_pointer_cast<SchemePromise>(l.front());
@@ -317,5 +363,19 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
                 return l.front();
             return std::dynamic_pointer_cast<SchemeObject>(t->force());
         }
+        },
+        {"environment?", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("environment?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemeEnvironment>(l.front());
+            return p ? scheme_true : scheme_false;
         }
+        },
+        {"eval",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            std::shared_ptr<SchemeEnvironment> e;
+            if(l.size() != 2 || !(e = std::dynamic_pointer_cast<SchemeEnvironment>(l.back())))
+                throw eval_error("eval: code and environment required");
+            return do_unquote(l.front())->evaluate(e->context);
+        }
+        },
 };

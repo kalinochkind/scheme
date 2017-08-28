@@ -31,6 +31,7 @@ int main()
         }
     }
     global_context.newFrame();
+    global_context.set("user-initial-environment", std::make_shared<SchemeEnvironment>(global_context));
     while(true)
     {
         try

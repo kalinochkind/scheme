@@ -92,6 +92,11 @@ std::shared_ptr<SchemeObject> SchemePromise::force()
     return value;
 }
 
+std::string SchemeEnvironment::toString() const
+{
+    return "<environment>";
+}
+
 std::string ASTNode::toString() const
 {
     if(type != ast_type_t::LIST)
