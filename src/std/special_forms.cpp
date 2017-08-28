@@ -170,6 +170,33 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return res;
         }
         },
+        {"letrec",          [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                               std::shared_ptr<SchemeFunc> tail_func) {
+            if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
+                throw eval_error("letrec: parameters and code required");
+            auto pl = l.front()->list;
+            Context local_context = context;
+            local_context.newFrame();
+            for(auto i : pl)
+            {
+                if(i->type != ast_type_t::LIST || !(i->list.size() == 2 || i->list.size() == 1) ||
+                   i->list.front()->type != ast_type_t::NAME)
+                    throw eval_error("letrec: list of (name value) required");
+                local_context.set(i->list.front()->value, nullptr);
+            }
+            for(auto i : pl)
+            {
+                auto value = i->list.size() == 2 ? i->list.back()->evaluate(local_context) : nullptr;
+                local_context.assign(i->list.front()->value, value);
+            }
+            std::shared_ptr<SchemeObject> res;
+            for(auto i = next(l.begin()); i != l.end(); ++i)
+            {
+                res = (*i)->evaluate(local_context, next(i) == l.end() ? tail_func : nullptr);
+            }
+            return res;
+        }
+        },
         {"cond",            [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                                std::shared_ptr<SchemeFunc> tail_func) {
             for(auto branch : l)
