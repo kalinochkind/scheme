@@ -69,4 +69,8 @@ std::string startup = "(define (> x y) (< y x)) "
         "  (if (or (null? args) (nils args)) the-empty-stream (cons-stream (apply fun (cars args)) (apply stream-map fun (cdrs args))))) "
         "(define (stream-ref stream k) (if (= k 0) (stream-car stream) (stream-ref (stream-cdr stream) (- k 1)))) "
         "(define (stream-head stream k) (if (= k 0) nil (cons (stream-car stream) (stream-head (stream-cdr stream) (- k 1))))) "
-        "(define system-global-environment (the-environment))";
+        "(define system-global-environment (the-environment)) "
+        "(define (member-procedure eq) (define (fun object list) "
+        "  (cond ((null? list) false) ((eq object (car list)) list) (else (fun object (cdr list))))) fun) "
+        "(define memq (member-procedure eq?)) "
+        "(define member (member-procedure equal?)) ";
