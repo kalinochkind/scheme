@@ -67,15 +67,15 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
                                                                             std::shared_ptr<SchemeFunc> tail_func)>> special_forms = {
         {"define",          [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                                std::shared_ptr<SchemeFunc>) {
-            if(l.size() < 2)
-                throw eval_error("define: at least 2 arguments required");
+            if(l.size() < 1)
+                throw eval_error("define: name and value required");
             if(l.front()->type == ast_type_t::NAME)
             {
-                if(l.size() != 2)
+                if(l.size() > 2)
                     throw eval_error("define: name and value required");
-                auto res = (*next(l.begin()))->evaluate(context);
-                context.set((*l.begin())->value, res);
-                return res;
+                auto res = l.size() == 2 ? l.back()->evaluate(context) : nullptr;
+                context.set(l.front()->value, res);
+                return res ? res : scheme_empty;
             }
             else if(l.front()->type == ast_type_t::LIST && l.front()->list.size())
             {
@@ -113,9 +113,11 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             local_context.newFrame();
             for(auto i : pl)
             {
-                if(i->type != ast_type_t::LIST || i->list.size() != 2 || i->list.front()->type != ast_type_t::NAME)
+                if(i->type != ast_type_t::LIST || !(i->list.size() == 2 || i->list.size() == 1) ||
+                   i->list.front()->type != ast_type_t::NAME)
                     throw eval_error("let: list of (name value) required");
-                local_context.set(i->list.front()->value, (*next(i->list.begin()))->evaluate(context));
+                local_context.set(i->list.front()->value,
+                                  i->list.size() == 2 ? i->list.back()->evaluate(context) : nullptr);
             }
             if(name.empty())
             {
@@ -153,9 +155,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             Context local_context = context;
             for(auto i : pl)
             {
-                if(i->type != ast_type_t::LIST || i->list.size() != 2 || i->list.front()->type != ast_type_t::NAME)
+                if(i->type != ast_type_t::LIST || !(i->list.size() == 2 || i->list.size() == 1) ||
+                   i->list.front()->type != ast_type_t::NAME)
                     throw eval_error("let*: list of (name value) required");
-                auto value = (*next(i->list.begin()))->evaluate(local_context);
+                auto value = i->list.size() == 2 ? i->list.back()->evaluate(local_context) : nullptr;
                 local_context.newFrame();
                 local_context.set(i->list.front()->value, value);
             }
@@ -271,11 +274,11 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
         },
         {"set!",            [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                                std::shared_ptr<SchemeFunc>) {
-            if(l.size() != 2 || l.front()->type != ast_type_t::NAME)
+            if(!(l.size() == 1 || l.size() == 2) || l.front()->type != ast_type_t::NAME)
                 throw eval_error("set!: name and value required");
-            auto res = l.back()->evaluate(context);
+            auto res = l.size() == 2 ? l.back()->evaluate(context) : nullptr;
             context.assign(l.front()->value, res);
-            return res;
+            return res ? res : scheme_empty;
         }
         },
         {"begin",           [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
