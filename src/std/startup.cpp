@@ -73,4 +73,5 @@ std::string startup = "(define (> x y) (< y x)) "
         "(define (member-procedure eq) (define (fun object list) "
         "  (cond ((null? list) false) ((eq object (car list)) list) (else (fun object (cdr list))))) fun) "
         "(define memq (member-procedure eq?)) "
-        "(define member (member-procedure equal?)) ";
+        "(define member (member-procedure equal?)) "
+        "(define eqv? eq?) ";

@@ -140,6 +140,40 @@ std::shared_ptr<ASTNode> do_unquote(std::shared_ptr<SchemeObject> o)
     return a;
 }
 
+static bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b)
+{
+    if (a == b)
+        return true;
+    {
+        auto p1 = std::dynamic_pointer_cast<SchemeName>(a);
+        auto p2 = std::dynamic_pointer_cast<SchemeName>(b);
+        if(p1 && p2)
+            return p1->value == p2->value;
+    }
+    {
+        auto p1 = std::dynamic_pointer_cast<SchemeBool>(a);
+        auto p2 = std::dynamic_pointer_cast<SchemeBool>(b);
+        if(p1 && p2)
+            return p1->value == p2->value;
+    }
+    {
+        auto p1 = std::dynamic_pointer_cast<SchemeBuiltinFunc>(a);
+        auto p2 = std::dynamic_pointer_cast<SchemeBuiltinFunc>(b);
+        if(p1 && p2)
+            return p1->name == p2->name;
+    }
+    if((is_int(a) && is_int(b)) || (is_float(a) && is_float(b)))
+        return get_value(a, "") == get_value(b, "");
+    {
+        auto p1 = std::dynamic_pointer_cast<SchemeString>(a);
+        auto p2 = std::dynamic_pointer_cast<SchemeString>(b);
+        if(p1 && p2)
+            return p1->value == p2->value;
+    }
+    // TODO characters
+    return false;
+}
+
 
 std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         const std::list<std::shared_ptr<SchemeObject>> &)>> functions = {
@@ -271,7 +305,8 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         {"cons",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("cons: 2 arguments required");
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemePair>(l.front(), l.back()));
+            return std::dynamic_pointer_cast<SchemeObject>(
+                    std::make_shared<SchemePair>(l.front(), l.back()));
         }
         },
         {"pair?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -284,35 +319,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         {"eq?",          [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("eq?: 2 arguments required");
-            if(l.front() == l.back())
-                return scheme_true;
-            {
-                auto p1 = std::dynamic_pointer_cast<SchemeName>(l.front());
-                auto p2 = std::dynamic_pointer_cast<SchemeName>(l.back());
-                if(p1 && p2)
-                    return p1->value == p2->value ? scheme_true : scheme_false;
-            }
-            {
-                auto p1 = std::dynamic_pointer_cast<SchemeBool>(l.front());
-                auto p2 = std::dynamic_pointer_cast<SchemeBool>(l.back());
-                if(p1 && p2)
-                    return p1->value == p2->value ? scheme_true : scheme_false;
-            }
-            {
-                auto p1 = std::dynamic_pointer_cast<SchemeBuiltinFunc>(l.front());
-                auto p2 = std::dynamic_pointer_cast<SchemeBuiltinFunc>(l.back());
-                if(p1 && p2)
-                    return p1->name == p2->name ? scheme_true : scheme_false;
-            }
-            if((is_int(l.front()) || is_float(l.front())) && (is_int(l.back()) || is_float(l.back())))
-                return get_value(l.front(), "") == get_value(l.back(), "") ? scheme_true : scheme_false;
-            {
-                auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
-                auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
-                if(p1 && p2)
-                    return p1->value == p2->value ? scheme_true : scheme_false;
-            }
-            return scheme_false;
+            return eq_test(l.front(), l.back()) ? scheme_true : scheme_false;
         }
         },
         {"symbol?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
