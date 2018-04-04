@@ -89,11 +89,11 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
         o->list.push_back(readObject(is));
         return o;
     }
-    o->value.push_back(c);
+    o->value.push_back(tolower(c));
     c = is.peek();
     while(!is_delimiter(c))
     {
-        o->value.push_back(c);
+        o->value.push_back(tolower(c));
         is.get();
         c = is.peek();
     }
