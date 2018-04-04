@@ -36,6 +36,7 @@ int main()
     {
         try
         {
+            std::cout << ">> ";
             x = readObject(std::cin);
         }
         catch(end_of_input)
