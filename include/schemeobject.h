@@ -13,7 +13,7 @@ using context_map_t = std::map<std::string, std::shared_ptr<SchemeObject>>;
 
 enum class ast_type_t
 {
-    LIST, NAME, INT, FLOAT, STRING
+    LIST, NAME, INT, FLOAT, STRING, BOOL
 };
 
 struct Context

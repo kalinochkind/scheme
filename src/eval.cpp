@@ -90,6 +90,8 @@ std::shared_ptr<SchemeObject> ASTNode::evaluate(Context &context, std::shared_pt
         return std::make_shared<SchemeFloat>(stod(value));
     if(type == ast_type_t::STRING)
         return std::make_shared<SchemeString>(value);
+    if(type == ast_type_t::BOOL)
+        return std::make_shared<SchemeBool>(value == "t");
     if(type == ast_type_t::NAME)
     {
         auto t = context.get(value);

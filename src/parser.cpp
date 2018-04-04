@@ -47,56 +47,71 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
     auto o = std::make_shared<ASTNode>();
     skip_whitespace(is);
     int c = is.get();
-    if(c == EOF)
-        throw end_of_input("");
-    if(c == ')')
-        throw parse_error("Invalid syntax");
-    if(c == '"')
+    switch(c)
     {
-        o->type = ast_type_t::STRING;
-        c = is.get();
-        while(c != EOF && c != '"')
-        {
-            o->value.push_back(c);
+        case EOF:
+            throw end_of_input("");
+        case ')':
+            throw parse_error("Invalid syntax");
+        case '"':
+            o->type = ast_type_t::STRING;
             c = is.get();
-        }
-        if(c == EOF)
-            throw parse_error("Unclosed string literal");
-        return o;
-    }
-    if(c == '(')
-    {
-        o->type = ast_type_t::LIST;
-        skip_whitespace(is);
-        c = is.peek();
-        while(c != EOF && c != ')')
+            while(c != EOF && c != '"')
+            {
+                o->value.push_back(c);
+                c = is.get();
+            }
+            if(c == EOF)
+                throw parse_error("Unclosed string literal");
+            return o;
+        case '(':
+            o->type = ast_type_t::LIST;
+            skip_whitespace(is);
+            c = is.peek();
+            while(c != EOF && c != ')')
+            {
+                o->list.push_back(readObject(is));
+                c = skip_whitespace(is);
+            }
+            if(c == EOF)
+                throw parse_error("Unclosed list literal");
+            is.get();
+            return o;
+        case '\'':
         {
-            o->list.push_back(readObject(is));
-            c = skip_whitespace(is);
+            auto quote = std::make_shared<ASTNode>();
+            quote->type = ast_type_t::NAME;
+            quote->value = "quote";
+            o->list.push_back(quote);
         }
-        if(c == EOF)
-            throw parse_error("Unclosed list literal");
-        is.get();
-        return o;
+            o->type = ast_type_t::LIST;
+            o->list.push_back(readObject(is));
+            return o;
+        case '#':
+            c = tolower(is.get());
+            switch(c)
+            {
+                case 't':
+                    o->type = ast_type_t::BOOL;
+                    o->value = "t";
+                    return o;
+                case 'f':
+                    o->type = ast_type_t::BOOL;
+                    o->value = "f";
+                    return o;
+                default:
+                    throw parse_error(std::string("Invalid sequence: #") + char(c));
+            }
+        default:
+            o->value.push_back(tolower(c));
+            c = is.peek();
+            while(!is_delimiter(c))
+            {
+                o->value.push_back(tolower(c));
+                is.get();
+                c = is.peek();
+            }
+            o->type = identifier_type(o->value);
+            return o;
     }
-    if(c == '\'')
-    {
-        auto quote = std::make_shared<ASTNode>();
-        quote->type = ast_type_t::NAME;
-        quote->value = "quote";
-        o->type = ast_type_t::LIST;
-        o->list.push_back(quote);
-        o->list.push_back(readObject(is));
-        return o;
-    }
-    o->value.push_back(tolower(c));
-    c = is.peek();
-    while(!is_delimiter(c))
-    {
-        o->value.push_back(tolower(c));
-        is.get();
-        c = is.peek();
-    }
-    o->type = identifier_type(o->value);
-    return o;
 }
