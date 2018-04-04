@@ -13,6 +13,12 @@ static ast_type_t identifier_type(const std::string &s)
     return ast_type_t::NAME;
 }
 
+static bool is_delimiter(int c)
+{
+    return (c == '(' || c == ')' || c == ';' || c == '"' || c == '\'' || c == '`' ||
+            c == '|' || c == '[' || c == ']' || c == '{' || c == '}' || c == EOF || isspace(c));
+}
+
 static int skip_whitespace(std::istream &is)
 {
     int c;
@@ -85,7 +91,7 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
     }
     o->value.push_back(c);
     c = is.peek();
-    while(c != EOF && c != '(' && c != ')' && !isspace(c))
+    while(!is_delimiter(c))
     {
         o->value.push_back(c);
         is.get();
