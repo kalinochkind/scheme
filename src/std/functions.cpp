@@ -123,6 +123,13 @@ std::shared_ptr<ASTNode> do_unquote(std::shared_ptr<SchemeObject> o)
         a->value = ps->value;
         return a;
     }
+    auto pb = std::dynamic_pointer_cast<SchemeBool>(o);
+    if(pb)
+    {
+        a->type = ast_type_t::BOOL;
+        a->value = pb->value ? "t" : "f";
+        return a;
+    }
     auto pp = std::dynamic_pointer_cast<SchemePair>(o);
     if(!pp)
     {

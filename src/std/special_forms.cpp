@@ -37,7 +37,8 @@ make_function(const std::list<std::shared_ptr<ASTNode>> &l, const Context &conte
 static std::shared_ptr<SchemeObject> do_quote(std::shared_ptr<ASTNode> node)
 {
 
-    if(node->type == ast_type_t::STRING || node->type == ast_type_t::INT || node->type == ast_type_t::FLOAT)
+    if(node->type == ast_type_t::STRING || node->type == ast_type_t::INT || node->type == ast_type_t::FLOAT ||
+            node->type == ast_type_t::BOOL)
     {
         Context dummy;
         return node->evaluate(dummy);
