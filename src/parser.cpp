@@ -58,7 +58,20 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
             c = is.get();
             while(c != EOF && c != '"')
             {
-                o->value.push_back(c);
+                if(c == '\\')
+                {
+                    c = is.get();
+                    if(c == 'n')
+                        o->value.push_back('\n');
+                    else if(c == 't')
+                        o->value.push_back('\t');
+                    else if(c == 'f')
+                        o->value.push_back('\f');
+                    else
+                        o->value.push_back(c);
+                }
+                else
+                    o->value.push_back(c);
                 c = is.get();
             }
             if(c == EOF)

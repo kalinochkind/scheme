@@ -5,7 +5,7 @@
 
 std::shared_ptr<SchemeObject> scheme_true = std::make_shared<SchemeBool>(true);
 std::shared_ptr<SchemeObject> scheme_false = std::make_shared<SchemeBool>(false);
-std::shared_ptr<SchemeObject> scheme_empty = std::make_shared<SchemeString>("");
+std::shared_ptr<SchemeObject> scheme_empty = std::make_shared<SchemeName>("");
 std::shared_ptr<SchemeObject> scheme_nil = std::make_shared<SchemePair>(nullptr, nullptr);
 
 static bool pair_function(const std::string &s)

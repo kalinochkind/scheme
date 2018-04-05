@@ -40,10 +40,10 @@ struct ASTNode
     std::list<std::shared_ptr<ASTNode>> list;
 
     ASTNode(): type(ast_type_t::LIST), value(), list() {};
+    ASTNode(ast_type_t type, const std::string &value): type(type), value(value), list() {};
 
     std::shared_ptr<SchemeObject> evaluate(Context &context, std::shared_ptr<SchemeFunc> tail_func = nullptr);
 
-    std::string toString() const;
 };
 
 
@@ -51,12 +51,19 @@ struct SchemeObject
 {
     virtual ~SchemeObject() {};
 
-    virtual std::string toString() const = 0;
+    virtual std::string externalRepr() const = 0;
+
+    virtual std::string printable() const
+    {
+        return externalRepr();
+    }
 
     virtual bool toBool() const
     {
         return true;
     }
+
+    virtual std::shared_ptr<ASTNode> toAST() const;
 };
 
 struct SchemeInt: public SchemeObject
@@ -65,7 +72,8 @@ struct SchemeInt: public SchemeObject
 
     SchemeInt(long long a): value(a) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
+    std::shared_ptr<ASTNode> toAST() const override;
 };
 
 struct SchemeFloat: public SchemeObject
@@ -74,7 +82,8 @@ struct SchemeFloat: public SchemeObject
 
     SchemeFloat(double a): value(a) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
+    std::shared_ptr<ASTNode> toAST() const override;
 };
 
 struct SchemeFunc: public SchemeObject
@@ -86,7 +95,7 @@ struct SchemeFunc: public SchemeObject
 
     SchemeFunc(): params(), body(), context(), arglist(false) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
 };
 
 struct SchemeBuiltinFunc: public SchemeFunc
@@ -95,7 +104,7 @@ struct SchemeBuiltinFunc: public SchemeFunc
 
     SchemeBuiltinFunc(std::string s): name(s) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
 };
 
 struct SchemeBool: public SchemeObject
@@ -104,7 +113,8 @@ struct SchemeBool: public SchemeObject
 
     SchemeBool(bool a): value(a) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
+    std::shared_ptr<ASTNode> toAST() const override;
 
     bool toBool() const override
     {
@@ -118,7 +128,9 @@ struct SchemeString: public SchemeObject
 
     SchemeString(std::string s): value(s) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
+    std::shared_ptr<ASTNode> toAST() const override;
+    std::string printable() const override;
 };
 
 struct SchemePair: public SchemeObject
@@ -127,7 +139,8 @@ struct SchemePair: public SchemeObject
 
     SchemePair(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b): car(a), cdr(b) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
+    std::shared_ptr<ASTNode> toAST() const override;
 };
 
 struct SchemeName: public SchemeObject
@@ -136,7 +149,8 @@ struct SchemeName: public SchemeObject
 
     SchemeName(std::string s): value(s) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
+    std::shared_ptr<ASTNode> toAST() const override;
 };
 
 struct SchemePromise: public SchemeObject
@@ -146,7 +160,7 @@ struct SchemePromise: public SchemeObject
 
     SchemePromise(std::shared_ptr<SchemeFunc> f): value(nullptr), func(f) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
 
     std::shared_ptr<SchemeObject> force();
 };
@@ -157,7 +171,7 @@ struct SchemeEnvironment: public SchemeObject
 
     SchemeEnvironment(const Context &c): context(c) {};
 
-    std::string toString() const override;
+    std::string externalRepr() const override;
 };
 
 #endif

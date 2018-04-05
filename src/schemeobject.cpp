@@ -3,17 +3,64 @@
 #include "std.h"
 #include "eval.h"
 
-std::string SchemeInt::toString() const
+
+static std::string quote_string(const std::string &s)
+{
+    std::string ans = "\"";
+    for(char c : s)
+    {
+        switch(c)
+        {
+            case '"':
+            case '\\':
+                ans.push_back('\\');
+                ans.push_back(c);
+                break;
+            case '\n':
+                ans.push_back('\\');
+                ans.push_back('n');
+                break;
+            case '\t':
+                ans.push_back('\\');
+                ans.push_back('t');
+                break;
+            case '\f':
+                ans.push_back('\\');
+                ans.push_back('f');
+                break;
+            default:
+                ans.push_back(c);
+        }
+    }
+    return ans + "\"";
+}
+
+std::shared_ptr<ASTNode> SchemeObject::toAST() const
+{
+    throw eval_error("Cannot evaluate " + externalRepr());
+}
+
+std::string SchemeInt::externalRepr() const
 {
     return std::to_string(value);
 }
 
-std::string SchemeFloat::toString() const
+std::shared_ptr<ASTNode> SchemeInt::toAST() const
+{
+    return std::make_shared<ASTNode>(ast_type_t::INT, externalRepr());
+}
+
+std::string SchemeFloat::externalRepr() const
 {
     return std::to_string(value);
 }
 
-std::string SchemeFunc::toString() const
+std::shared_ptr<ASTNode> SchemeFloat::toAST() const
+{
+    return std::make_shared<ASTNode>(ast_type_t::FLOAT, externalRepr());
+}
+
+std::string SchemeFunc::externalRepr() const
 {
     std::string res = "<function (";
     for(auto i = params.begin(); i != params.end(); ++i)
@@ -24,16 +71,10 @@ std::string SchemeFunc::toString() const
             res += ". ";
         res += *i;
     }
-    res += ")";
-    /* for(auto &&i : body)
-     {
-         res += " " + i.toString();
-     }*/
-    res += ">";
-    return res;
+    return res + ")>";
 }
 
-std::string SchemeBuiltinFunc::toString() const
+std::string SchemeBuiltinFunc::externalRepr() const
 {
     if(special_forms.count(name))
         return "<special form '" + name + "'>";
@@ -41,21 +82,36 @@ std::string SchemeBuiltinFunc::toString() const
         return "<builtin function '" + name + "'>";
 }
 
-std::string SchemeBool::toString() const
+std::string SchemeBool::externalRepr() const
 {
     return value ? "#t" : "#f";
 }
 
-std::string SchemeString::toString() const
+std::shared_ptr<ASTNode> SchemeBool::toAST() const
+{
+    return std::make_shared<ASTNode>(ast_type_t::BOOL, value ? "t" : "f");
+}
+
+std::string SchemeString::externalRepr() const
+{
+    return quote_string(value);
+}
+
+std::shared_ptr<ASTNode> SchemeString::toAST() const
+{
+    return std::make_shared<ASTNode>(ast_type_t::STRING, value);
+}
+
+std::string SchemeString::printable() const
 {
     return value;
 }
 
-std::string SchemePair::toString() const
+std::string SchemePair::externalRepr() const
 {
     if(!car)
         return "()";
-    std::string res = "(" + car->toString();
+    std::string res = "(" + car->externalRepr();
     std::shared_ptr<SchemeObject> p = cdr;
     std::shared_ptr<SchemePair> pp;
     std::set<const SchemePair *> visited{this};
@@ -63,21 +119,42 @@ std::string SchemePair::toString() const
     {
         if(p == scheme_nil)
             return res + ")";
-        res += " " + pp->car->toString();
+        res += " " + pp->car->externalRepr();
         if(visited.count(pp.get()))
             return res + " ...)";
         p = pp->cdr;
         visited.insert(pp.get());
     }
-    return res + " . " + p->toString() + ")";
+    return res + " . " + p->externalRepr() + ")";
 }
 
-std::string SchemeName::toString() const
+std::shared_ptr<ASTNode> SchemePair::toAST() const
+{
+    auto a = std::make_shared<ASTNode>();
+    const SchemePair *p(this);
+    while(p && p != scheme_nil.get())
+    {
+        a->list.push_back(p->car->toAST());
+        p = dynamic_cast<const SchemePair*>(p->cdr.get());
+    }
+    if(!p)
+    {
+        return SchemeObject::toAST();
+    }
+    return a;
+}
+
+std::string SchemeName::externalRepr() const
 {
     return value;
 }
 
-std::string SchemePromise::toString() const
+std::shared_ptr<ASTNode> SchemeName::toAST() const
+{
+    return std::make_shared<ASTNode>(ast_type_t::NAME, value);
+}
+
+std::string SchemePromise::externalRepr() const
 {
     return "<promise>";
 }
@@ -92,24 +169,9 @@ std::shared_ptr<SchemeObject> SchemePromise::force()
     return value;
 }
 
-std::string SchemeEnvironment::toString() const
+std::string SchemeEnvironment::externalRepr() const
 {
     return "<environment>";
-}
-
-std::string ASTNode::toString() const
-{
-    if(type != ast_type_t::LIST)
-        return value;
-    std::string res = "(";
-    for(auto i = list.begin(); i != list.end(); ++i)
-    {
-        if(i != list.begin())
-            res += " ";
-        res += (*i)->toString();
-    }
-    res += ")";
-    return res;
 }
 
 std::shared_ptr<SchemeObject> Context::get(const std::string &name) const

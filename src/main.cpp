@@ -50,7 +50,7 @@ int main()
         }
         try
         {
-            std::cout << x->evaluate(global_context)->toString() << '\n';
+            std::cout << x->evaluate(global_context)->externalRepr() << '\n';
         }
         catch(eval_error &e)
         {
