@@ -18,4 +18,6 @@ extern std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObjec
 
 std::chrono::milliseconds get_current_time();
 
+Context initGlobalContext();
+
 #endif //SCHEME_STD_H

@@ -1,6 +1,9 @@
 #include <string>
+#include <schemeobject.h>
+#include <sstream>
+#include <parser.h>
 
-std::string startup = "(define (> x y) (< y x)) "
+const std::string startup = "(define (> x y) (< y x)) "
         "(define (>= x y) (not (< x y))) "
         "(define (<= x y) (not (< y x))) "
         "(define true #t) "
@@ -75,3 +78,28 @@ std::string startup = "(define (> x y) (< y x)) "
         "(define memq (member-procedure eq?)) "
         "(define member (member-procedure equal?)) "
         "(define eqv? eq?) ";
+
+
+Context initGlobalContext()
+{
+    Context global_context;
+    global_context.newFrame();
+    std::istringstream st;
+    st.str(startup);
+    std::shared_ptr<ASTNode> x;
+    while(1)
+    {
+        try
+        {
+            x = readObject(st);
+            x->evaluate(global_context);
+        }
+        catch(end_of_input)
+        {
+            break;
+        }
+    }
+    global_context.newFrame();
+    global_context.set("user-initial-environment", std::make_shared<SchemeEnvironment>(global_context));
+    return global_context;
+}
