@@ -62,7 +62,7 @@ std::shared_ptr<ASTNode> SchemeFloat::toAST() const
 
 std::string SchemeFunc::externalRepr() const
 {
-    std::string res = "<function (";
+    std::string res = "<function " + name + "(";
     for(auto i = params.begin(); i != params.end(); ++i)
     {
         if(i != params.begin())

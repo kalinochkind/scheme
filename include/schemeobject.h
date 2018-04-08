@@ -88,21 +88,20 @@ struct SchemeFloat: public SchemeObject
 
 struct SchemeFunc: public SchemeObject
 {
+    std::string name;
     std::list<std::string> params;
     std::list<ASTNode> body;
     Context context;
     bool arglist;
 
-    SchemeFunc(): params(), body(), context(), arglist(false) {};
+    SchemeFunc(std::string name = ""): name(name), params(), body(), context(), arglist(false) {};
 
     std::string externalRepr() const override;
 };
 
 struct SchemeBuiltinFunc: public SchemeFunc
 {
-    std::string name;
-
-    SchemeBuiltinFunc(std::string s): name(s) {};
+    using SchemeFunc::SchemeFunc;
 
     std::string externalRepr() const override;
 };

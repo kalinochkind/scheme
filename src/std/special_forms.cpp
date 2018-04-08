@@ -5,14 +5,15 @@
 #include "parser.h"
 
 static std::shared_ptr<SchemeObject>
-make_function(const std::list<std::shared_ptr<ASTNode>> &l, const Context &context, const std::string &form)
+make_function(const std::string &name, const std::list<std::shared_ptr<ASTNode>> &l, const Context &context,
+              const std::string &form)
 {
     if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
         throw eval_error(form + ": parameters and code required");
     auto pl = l.front()->list;
-    if(form == "define")
+    if(form == "define" || form == "named-lambda")
         pl.pop_front();
-    std::shared_ptr<SchemeFunc> f = std::make_shared<SchemeFunc>();
+    std::shared_ptr<SchemeFunc> f = std::make_shared<SchemeFunc>(name);
     for(auto i = pl.begin(); i != pl.end(); ++i)
     {
         if((*i)->type != ast_type_t::NAME)
@@ -38,7 +39,7 @@ static std::shared_ptr<SchemeObject> do_quote(std::shared_ptr<ASTNode> node)
 {
 
     if(node->type == ast_type_t::STRING || node->type == ast_type_t::INT || node->type == ast_type_t::FLOAT ||
-            node->type == ast_type_t::BOOL)
+       node->type == ast_type_t::BOOL)
     {
         Context dummy;
         return node->evaluate(dummy);
@@ -78,9 +79,10 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
                 context.set(l.front()->value, res);
                 return res ? res : scheme_empty;
             }
-            else if(l.front()->type == ast_type_t::LIST && l.front()->list.size())
+            else if(l.front()->type == ast_type_t::LIST && l.front()->list.size() &&
+                    l.front()->list.front()->type == ast_type_t::NAME)
             {
-                auto f = make_function(l, context, "define");
+                auto f = make_function(l.front()->list.front()->value, l, context, "define");
                 context.set(l.front()->list.front()->value, f);
                 return f;
             }
@@ -90,7 +92,15 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
         },
         {"lambda",          [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                                std::shared_ptr<SchemeFunc>) {
-            return make_function(l, context, "lambda");
+            return make_function("", l, context, "lambda");
+        }
+        },
+        {"named-lambda",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                               std::shared_ptr<SchemeFunc>) {
+            if(l.size() < 1 || l.front()->type != ast_type_t::LIST || l.front()->list.empty() ||
+               l.front()->list.front()->type != ast_type_t::NAME)
+                throw eval_error("named-lambda: name and code required");
+            return make_function(l.front()->list.front()->value, l, context, "named-lambda");
         }
         },
         {"let",             [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
