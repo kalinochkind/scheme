@@ -208,6 +208,34 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return res;
         }
         },
+        {"fluid-let",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                               std::shared_ptr<SchemeFunc>) {
+            if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
+                throw eval_error("fluid-let: parameters and code required");
+            auto pl = l.front()->list;
+            std::map<std::string, std::shared_ptr<SchemeObject>> old_vars;
+            for(auto i : pl)
+            {
+                if(i->type != ast_type_t::LIST || !(i->list.size() == 2 || i->list.size() == 1) ||
+                   i->list.front()->type != ast_type_t::NAME)
+                    throw eval_error("fluid-let: list of (name value) required");
+                auto value = i->list.size() == 2 ? i->list.back()->evaluate(context) : nullptr;
+                auto old = context.get(i->list.front()->value);
+                old_vars[i->list.front()->value] = old;  // can be nullptr
+                context.assign(i->list.front()->value, value);
+            }
+            std::shared_ptr<SchemeObject> res;
+            for(auto i = next(l.begin()); i != l.end(); ++i)
+            {
+                res = (*i)->evaluate(context, nullptr);
+            }
+            for(auto &&p : old_vars)
+            {
+                context.assign(p.first, p.second);
+            }
+            return res;
+        }
+        },
         {"cond",            [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                                std::shared_ptr<SchemeFunc> tail_func) {
             for(auto branch : l)
