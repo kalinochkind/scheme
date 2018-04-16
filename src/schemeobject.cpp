@@ -111,6 +111,25 @@ std::string SchemePair::externalRepr() const
 {
     if(!car)
         return "()";
+    auto pcar = std::dynamic_pointer_cast<SchemeName>(car);
+    if(pcar)
+    {
+        std::string prefix = "";
+        if(pcar->value == "quote")
+            prefix = "'";
+        else if(pcar->value == "quasiquote")
+            prefix = "`";
+        else if(pcar->value == "unquote")
+            prefix = ",";
+        else if(pcar->value == "unquote-splicing")
+            prefix = ",@";
+        if(prefix.length())
+        {
+            auto pcdr = std::dynamic_pointer_cast<SchemePair>(cdr);
+            if(pcdr->cdr == scheme_nil)
+                return prefix + pcdr->car->externalRepr();
+        }
+    }
     std::string res = "(" + car->externalRepr();
     std::shared_ptr<SchemeObject> p = cdr;
     std::shared_ptr<SchemePair> pp;

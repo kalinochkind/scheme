@@ -42,6 +42,16 @@ static int skip_whitespace(std::istream &is)
     }
 }
 
+void readQuoted(std::istream &is, std::shared_ptr<ASTNode> node, const std::string &form)
+{
+    auto quote = std::make_shared<ASTNode>();
+    quote->type = ast_type_t::NAME;
+    quote->value = form;
+    node->type = ast_type_t::LIST;
+    node->list.push_back(quote);
+    node->list.push_back(readObject(is));
+}
+
 std::shared_ptr<ASTNode> readObject(std::istream &is)
 {
     auto o = std::make_shared<ASTNode>();
@@ -91,14 +101,21 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
             is.get();
             return o;
         case '\'':
-        {
-            auto quote = std::make_shared<ASTNode>();
-            quote->type = ast_type_t::NAME;
-            quote->value = "quote";
-            o->list.push_back(quote);
-        }
-            o->type = ast_type_t::LIST;
-            o->list.push_back(readObject(is));
+            readQuoted(is, o, "quote");
+            return o;
+        case '`':
+            readQuoted(is, o, "quasiquote");
+            return o;
+        case ',':
+            if(is.peek() == '@')
+            {
+                is.get();
+                readQuoted(is, o, "unquote-splicing");
+            }
+            else
+            {
+                readQuoted(is, o, "unquote");
+            }
             return o;
         case '#':
             c = tolower(is.get());
