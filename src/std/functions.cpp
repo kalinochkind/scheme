@@ -94,7 +94,7 @@ static std::shared_ptr<SchemeObject> fold(const std::list<std::shared_ptr<Scheme
         return std::make_shared<SchemeInt>(n);
 }
 
-static bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b)
+bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b)
 {
     if (a == b)
         return true;

@@ -16,6 +16,8 @@ extern std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObjec
 extern std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(
         const std::list<std::shared_ptr<SchemeObject>> &)>> functions;
 
+bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b);
+
 std::chrono::milliseconds get_current_time();
 
 Context initGlobalContext();

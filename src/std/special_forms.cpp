@@ -327,6 +327,47 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
                 return scheme_empty;
         }
         },
+        {"case",            [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                               std::shared_ptr<SchemeFunc> tail_func) {
+            if(l.empty())
+                throw eval_error("case: argument required");
+            auto value = l.front()->evaluate(context);
+            for(auto it = next(l.begin()); it != l.end(); ++it)
+            {
+                bool passed = false;
+                if((*it)->type != ast_type_t::LIST || (*it)->list.empty())
+                    throw eval_error("case: non-empty lists required");
+                auto values = (*it)->list.front();
+                if(values->type == ast_type_t::NAME && values->value == "else")
+                    passed = true;
+                else if(values->type != ast_type_t::LIST)
+                {
+                    throw eval_error("case: lists required");
+                }
+                else
+                {
+                    for(auto &&j : values->list)
+                    {
+                        if(eq_test(value, do_quote(j, context, 0).first))
+                        {
+                            passed = true;
+                            break;
+                        }
+                    }
+                }
+                if(passed)
+                {
+                    auto result = scheme_empty;
+                    for(auto j = next((*it)->list.begin()); j != (*it)->list.end(); ++j)
+                    {
+                        result = (*j)->evaluate(context, next(j) == (*it)->list.end() ? tail_func : nullptr);
+                    }
+                    return result;
+                }
+            }
+            return scheme_empty;
+        }
+        },
         {"and",             [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                                std::shared_ptr<SchemeFunc> tail_func) {
             if(l.empty())
