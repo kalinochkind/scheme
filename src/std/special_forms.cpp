@@ -371,7 +371,7 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
         {"and",             [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                                std::shared_ptr<SchemeFunc> tail_func) {
             if(l.empty())
-                throw eval_error("and: non-empty list required");
+                return scheme_true;
             std::shared_ptr<SchemeObject> res;
             for(auto i = l.begin(); i != l.end(); ++i)
             {
