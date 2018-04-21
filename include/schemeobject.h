@@ -30,6 +30,8 @@ struct Context
 
     void newFrame();
 
+    void newFrame(const context_map_t &vars);
+
     void delFrame();
 };
 

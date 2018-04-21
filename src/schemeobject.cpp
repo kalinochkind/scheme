@@ -226,6 +226,11 @@ void Context::newFrame()
     locals.push_back(std::make_shared<context_map_t>());
 }
 
+void Context::newFrame(const context_map_t &vars)
+{
+    locals.push_back(std::make_shared<context_map_t>(vars));
+}
+
 void Context::delFrame()
 {
     locals.pop_back();

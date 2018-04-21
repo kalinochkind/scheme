@@ -277,6 +277,55 @@ std::unordered_map<std::string, std::function<std::shared_ptr<SchemeObject>(cons
             return res;
         }
         },
+        {"do",              [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
+                               std::shared_ptr<SchemeFunc> tail_func) {
+            if(l.size() < 2 || l.front()->type != ast_type_t::LIST || (*next(l.begin()))->type != ast_type_t::LIST)
+                throw eval_error("do: lists required");
+            context_map_t new_frame;
+            auto vars = l.front()->list;
+            auto cond = *next(l.begin());
+            if(cond->list.empty())
+                throw eval_error("do: empty condition");
+            for(auto &&i : vars)
+            {
+                if(i->type != ast_type_t::LIST || i->list.empty() || i->list.size() > 3 ||
+                   i->list.front()->type != ast_type_t::NAME)
+                    throw eval_error("do: bad variable list");
+                if(new_frame.count(i->list.front()->value))
+                    throw eval_error("do: duplicate variables");
+                new_frame[i->list.front()->value] = i->list.empty() ? nullptr : (*next(i->list.begin()))->evaluate(
+                        context);
+            }
+            Context local_context = context;
+            local_context.newFrame(new_frame);
+            while(true)
+            {
+                auto cond_value = cond->list.front()->evaluate(local_context);
+                if(cond_value->toBool())
+                {
+                    for(auto it = next(cond->list.begin()); it != cond->list.end(); ++it)
+                    {
+                        cond_value = (*it)->evaluate(local_context, next(it) == cond->list.end() ? tail_func : nullptr);
+                    }
+                    return cond_value;
+                }
+                for(auto it = next(next(l.begin())); it != l.end(); ++it)
+                {
+                    (*it)->evaluate(local_context);
+                }
+                new_frame.clear();
+                for(auto &&i : vars)
+                {
+                    if(i->list.size() < 3)
+                        new_frame[i->list.front()->value] = local_context.get(i->list.front()->value);
+                    else
+                        new_frame[i->list.front()->value] = i->list.back()->evaluate(local_context);
+                }
+                local_context.delFrame();
+                local_context.newFrame(new_frame);
+            }
+        }
+        },
         {"cond",            [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
                                std::shared_ptr<SchemeFunc> tail_func) {
             for(auto branch : l)
