@@ -66,6 +66,7 @@ struct SchemeObject
     }
 
     virtual std::shared_ptr<ASTNode> toAST() const;
+
 };
 
 struct SchemeInt: public SchemeObject

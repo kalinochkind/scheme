@@ -37,8 +37,8 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
     {
         if(special_forms.count(bf->name))
             throw eval_error(bf->name + " cannot be executed this way");
-        if(functions.count(bf->name))
-            return functions[bf->name](val_list);
+        if(FunctionRegistry::exists(bf->name))
+            return FunctionRegistry::get(bf->name)(val_list);
         if(val_list.size() != 1)
             throw eval_error(bf->name + ": one argument required");
         return execute_pair_function(bf->name, val_list.front());
@@ -97,7 +97,7 @@ std::shared_ptr<SchemeObject> ASTNode::evaluate(Context &context, std::shared_pt
         auto t = context.get(value);
         if(t)
             return t;
-        else if(special_forms.count(value) || functions.count(value) || pair_function(value))
+        else if(special_forms.count(value) || FunctionRegistry::exists(value) || pair_function(value))
             return std::make_shared<SchemeBuiltinFunc>(value);
         else
             throw eval_error("Undefined name: " + value);
