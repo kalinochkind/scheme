@@ -1,5 +1,6 @@
 #include <cmath>
 #include "std.h"
+#include "parser.h"
 
 static bool is_int(std::shared_ptr<SchemeObject> p)
 {
@@ -140,10 +141,21 @@ static Package package(
         },
         {"random",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
-                throw eval_error("random: an integer required");
-            long long max = get_int(l.front(), "random: an integer required");
-            long long res = (rand() * 1ll * RAND_MAX + rand()) % max;
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(res));
+                throw eval_error("random: a number required");
+            if(is_int(l.front()))
+            {
+                long long max = get_int(l.front(), "");
+                long long res = max ? (rand() * 1ll * RAND_MAX + rand()) % max : 0;
+                return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(res));
+            }
+            else if(is_float(l.front()))
+            {
+                double max = get_value(l.front(), "");
+                double res = (rand() * 1ll * RAND_MAX + rand()) / (RAND_MAX * 1. * RAND_MAX) * max;
+                return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(res));
+            }
+            else
+                throw eval_error("random: a number required");
         }
         },
         {"<",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -193,6 +205,32 @@ static Package package(
             if(l.size() != 1)
                 throw eval_error("exact?: one argument required");
             return is_int(l.front()) ? scheme_true : scheme_false;
+        }
+        },
+        {"number->string",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1 || !(is_int(l.front()) || is_float(l.front())))
+                throw eval_error("number->string: a number required");
+            return std::make_shared<SchemeString>(l.front()->externalRepr());
+        }
+        },
+        {"string->number",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            std::shared_ptr<SchemeString> s;
+            if(l.size() != 1 || !(s = std::dynamic_pointer_cast<SchemeString>(l.front())))
+                throw eval_error("string->number: a string required");
+            ast_type_t type = identifier_type(s->value);
+            try
+            {
+                if(type == ast_type_t::INT)
+                    return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(stoll(s->value)));
+                else if(type == ast_type_t::FLOAT)
+                    return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(stod(s->value)));
+                else
+                    return scheme_false;
+            }
+            catch(std::out_of_range &)
+            {
+                return scheme_false;
+            }
         }
         },
     }

@@ -93,10 +93,25 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
 
 ExecutionResult ASTNode::evaluate(Context &context)
 {
+
     if(type == ast_type_t::INT)
-        return ExecutionResult(std::make_shared<SchemeInt>(stoll(value)));
+        try
+        {
+            return ExecutionResult(std::make_shared<SchemeInt>(stoll(value)));
+        }
+        catch(std::out_of_range &)
+        {
+            throw eval_error("Invalid integer: " + value);
+        }
     if(type == ast_type_t::FLOAT)
-        return ExecutionResult(std::make_shared<SchemeFloat>(stod(value)));
+        try
+        {
+            return ExecutionResult(std::make_shared<SchemeFloat>(stod(value)));
+        }
+        catch(std::out_of_range &)
+        {
+            throw eval_error("Invalid float: " + value);
+        }
     if(type == ast_type_t::STRING)
         return ExecutionResult(std::make_shared<SchemeString>(value));
     if(type == ast_type_t::BOOL)

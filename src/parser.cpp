@@ -2,7 +2,7 @@
 #include <string>
 #include "parser.h"
 
-static ast_type_t identifier_type(const std::string &s)
+ast_type_t identifier_type(const std::string &s)
 {
     static const std::regex float_re("^-?(\\d+\\.\\d*|\\d*\\.\\d+)$");
     static const std::regex int_re("^-?\\d+$");
