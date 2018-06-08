@@ -76,7 +76,7 @@ std::string SchemeFunc::externalRepr() const
 
 std::string SchemeBuiltinFunc::externalRepr() const
 {
-    if(special_forms.count(name))
+    if(SpecialFormRegistry::exists(name))
         return "<special form '" + name + "'>";
     else
         return "<builtin function '" + name + "'>";

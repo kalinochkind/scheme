@@ -35,7 +35,7 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
     std::shared_ptr<SchemeBuiltinFunc> bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
     if(bf)
     {
-        if(special_forms.count(bf->name))
+        if(SpecialFormRegistry::exists(bf->name))
             throw eval_error(bf->name + " cannot be executed this way");
         if(FunctionRegistry::exists(bf->name))
             return FunctionRegistry::get(bf->name)(val_list);
@@ -97,7 +97,7 @@ std::shared_ptr<SchemeObject> ASTNode::evaluate(Context &context, std::shared_pt
         auto t = context.get(value);
         if(t)
             return t;
-        else if(special_forms.count(value) || FunctionRegistry::exists(value) || pair_function(value))
+        else if(SpecialFormRegistry::exists(value) || FunctionRegistry::exists(value) || pair_function(value))
             return std::make_shared<SchemeBuiltinFunc>(value);
         else
             throw eval_error("Undefined name: " + value);
@@ -111,11 +111,11 @@ std::shared_ptr<SchemeObject> ASTNode::evaluate(Context &context, std::shared_pt
         throw eval_error("Trying to call not a function");
     }
     std::shared_ptr<SchemeBuiltinFunc> bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
-    if(bf && special_forms.count(bf->name))
+    if(bf && SpecialFormRegistry::exists(bf->name))
     {
         auto nl = list;
         nl.pop_front();
-        return special_forms[bf->name](nl, context, tail_func);
+        return SpecialFormRegistry::get(bf->name)(nl, context, tail_func);
     }
     std::list<std::shared_ptr<SchemeObject>> val_list;
     for(auto lit = std::next(list.begin()); lit != list.end(); ++lit)
