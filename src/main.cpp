@@ -2,7 +2,6 @@
 #include <chrono>
 #include <sstream>
 #include <fstream>
-#include "eval.h"
 #include "parser.h"
 #include "std.h"
 
@@ -30,7 +29,7 @@ static int runREPL(Context &global_context)
         }
         try
         {
-            std::cout << x->evaluate(global_context)->externalRepr() << '\n';
+            std::cout << x->evaluate(global_context).force_value()->externalRepr() << '\n';
         }
         catch(eval_error &e)
         {
@@ -60,7 +59,7 @@ static int runFile(Context &global_context, std::istream &file)
         }
         try
         {
-            x->evaluate(global_context);
+            x->evaluate(global_context).force_value();
         }
         catch(eval_error &e)
         {

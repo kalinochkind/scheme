@@ -16,8 +16,6 @@ std::chrono::milliseconds get_current_time();
 Context initGlobalContext();
 
 
-
-
 template<class T>
 class Registry
 {
@@ -38,16 +36,15 @@ using BuiltinFunction = std::function<std::shared_ptr<SchemeObject>(
     const std::list<std::shared_ptr<SchemeObject>> &)>;
 using FunctionRegistry = Registry<BuiltinFunction>;
 
-using SpecialForm = std::function<std::shared_ptr<SchemeObject>(const std::list<std::shared_ptr<ASTNode>> &,
-                                                                Context &context,
-                                                                std::shared_ptr<SchemeFunc> tail_func)>;
+using SpecialForm = std::function<ExecutionResult(const std::list<std::shared_ptr<ASTNode>> &,
+                                                  Context &context)>;
 using SpecialFormRegistry = Registry<SpecialForm>;
-
 
 
 struct Package
 {
     Package(const std::map<std::string, BuiltinFunction> &);
+
     Package(const std::map<std::string, SpecialForm> &);
 };
 

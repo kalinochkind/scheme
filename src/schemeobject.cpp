@@ -1,7 +1,5 @@
 #include <set>
-#include "schemeobject.h"
 #include "std.h"
-#include "eval.h"
 
 
 static std::string quote_string(const std::string &s)
@@ -182,7 +180,7 @@ std::shared_ptr<SchemeObject> SchemePromise::force()
 {
     if(!value)
     {
-        value = execute_function(func, {});
+        value = execute_function(func, {}).force_value();
         func.reset();
     }
     return value;

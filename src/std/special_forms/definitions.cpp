@@ -1,7 +1,6 @@
 #include <list>
 #include <iostream>
 #include "std.h"
-#include "eval.h"
 #include "parser.h"
 
 
@@ -39,44 +38,40 @@ make_function(const std::string &name, const std::list<std::shared_ptr<ASTNode>>
 
 static Package package(
     {
-        {"define",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                            std::shared_ptr<SchemeFunc>) {
+        {"define",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() < 1)
                 throw eval_error("define: name and value required");
             if(l.front()->type == ast_type_t::NAME)
             {
                 if(l.size() > 2)
                     throw eval_error("define: name and value required");
-                auto res = l.size() == 2 ? l.back()->evaluate(context) : nullptr;
+                auto res = l.size() == 2 ? l.back()->evaluate(context).force_value() : nullptr;
                 context.set(l.front()->value, res);
-                return res ? res : scheme_empty;
+                return ExecutionResult(res ? res : scheme_empty);
             }
             else if(l.front()->type == ast_type_t::LIST && l.front()->list.size() &&
                     l.front()->list.front()->type == ast_type_t::NAME)
             {
                 auto f = make_function(l.front()->list.front()->value, l, context, "define");
                 context.set(l.front()->list.front()->value, f);
-                return f;
+                return ExecutionResult(f);
             }
             else
                 throw eval_error("define: invalid arguments");
         }
         },
-        {"lambda",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                            std::shared_ptr<SchemeFunc>) {
-            return make_function("", l, context, "lambda");
+        {"lambda",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+            return ExecutionResult(make_function("", l, context, "lambda"));
         }
         },
-        {"named-lambda", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                            std::shared_ptr<SchemeFunc>) {
+        {"named-lambda", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() < 1 || l.front()->type != ast_type_t::LIST || l.front()->list.empty() ||
                l.front()->list.front()->type != ast_type_t::NAME)
                 throw eval_error("named-lambda: name and code required");
-            return make_function(l.front()->list.front()->value, l, context, "named-lambda");
+            return ExecutionResult(make_function(l.front()->list.front()->value, l, context, "named-lambda"));
         }
         },
-        {"let",          [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                            std::shared_ptr<SchemeFunc> tail_func) {
+        {"let",          [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() < 2)
                 throw eval_error("let: parameters and code required");
             std::list<std::shared_ptr<ASTNode>> pl;
@@ -100,14 +95,15 @@ static Package package(
                    i->list.front()->type != ast_type_t::NAME)
                     throw eval_error("let: list of (name value) required");
                 local_context.set(i->list.front()->value,
-                                  i->list.size() == 2 ? i->list.back()->evaluate(context) : nullptr);
+                                  i->list.size() == 2 ? i->list.back()->evaluate(context).force_value() : nullptr);
             }
             if(name.empty())
             {
-                std::shared_ptr<SchemeObject> res;
+                ExecutionResult res;
                 for(auto i = next(l.begin()); i != l.end(); ++i)
                 {
-                    res = (*i)->evaluate(local_context, next(i) == l.end() ? tail_func : nullptr);
+                    res.force_value();
+                    res = (*i)->evaluate(local_context);
                 }
                 return res;
             }
@@ -122,16 +118,16 @@ static Package package(
                 f->params.push_back(i->list.front()->value);
             }
             local_context.set(name, f);
-            std::shared_ptr<SchemeObject> res;
+            ExecutionResult res;
             for(auto i = f->body.begin(); i != f->body.end(); ++i)
             {
-                res = i->evaluate(local_context, std::next(i) == f->body.end() ? tail_func : nullptr);
+                res.force_value();
+                res = i->evaluate(local_context);
             }
             return res;
         }
         },
-        {"let*",         [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                            std::shared_ptr<SchemeFunc> tail_func) {
+        {"let*",         [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
                 throw eval_error("let*: parameters and code required");
             auto pl = l.front()->list;
@@ -141,20 +137,20 @@ static Package package(
                 if(i->type != ast_type_t::LIST || !(i->list.size() == 2 || i->list.size() == 1) ||
                    i->list.front()->type != ast_type_t::NAME)
                     throw eval_error("let*: list of (name value) required");
-                auto value = i->list.size() == 2 ? i->list.back()->evaluate(local_context) : nullptr;
+                auto value = i->list.size() == 2 ? i->list.back()->evaluate(local_context).force_value() : nullptr;
                 local_context.newFrame();
                 local_context.set(i->list.front()->value, value);
             }
-            std::shared_ptr<SchemeObject> res;
+            ExecutionResult res;
             for(auto i = next(l.begin()); i != l.end(); ++i)
             {
-                res = (*i)->evaluate(local_context, next(i) == l.end() ? tail_func : nullptr);
+                res.force_value();
+                res = (*i)->evaluate(local_context);
             }
             return res;
         }
         },
-        {"letrec",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                            std::shared_ptr<SchemeFunc> tail_func) {
+        {"letrec",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
                 throw eval_error("letrec: parameters and code required");
             auto pl = l.front()->list;
@@ -169,19 +165,19 @@ static Package package(
             }
             for(auto i : pl)
             {
-                auto value = i->list.size() == 2 ? i->list.back()->evaluate(local_context) : nullptr;
+                auto value = i->list.size() == 2 ? i->list.back()->evaluate(local_context).force_value() : nullptr;
                 local_context.assign(i->list.front()->value, value);
             }
-            std::shared_ptr<SchemeObject> res;
+            ExecutionResult res;
             for(auto i = next(l.begin()); i != l.end(); ++i)
             {
-                res = (*i)->evaluate(local_context, next(i) == l.end() ? tail_func : nullptr);
+                res.force_value();
+                res = (*i)->evaluate(local_context);
             }
             return res;
         }
         },
-        {"fluid-let",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                            std::shared_ptr<SchemeFunc>) {
+        {"fluid-let",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
                 throw eval_error("fluid-let: parameters and code required");
             auto pl = l.front()->list;
@@ -191,7 +187,7 @@ static Package package(
                 if(i->type != ast_type_t::LIST || !(i->list.size() == 2 || i->list.size() == 1) ||
                    i->list.front()->type != ast_type_t::NAME)
                     throw eval_error("fluid-let: list of (name value) required");
-                auto value = i->list.size() == 2 ? i->list.back()->evaluate(context) : nullptr;
+                auto value = i->list.size() == 2 ? i->list.back()->evaluate(context).force_value() : nullptr;
                 auto old = context.get(i->list.front()->value);
                 old_vars[i->list.front()->value] = old;  // can be nullptr
                 context.assign(i->list.front()->value, value);
@@ -199,13 +195,13 @@ static Package package(
             std::shared_ptr<SchemeObject> res;
             for(auto i = next(l.begin()); i != l.end(); ++i)
             {
-                res = (*i)->evaluate(context, nullptr);
+                res = (*i)->evaluate(context).force_value();
             }
             for(auto &&p : old_vars)
             {
                 context.assign(p.first, p.second);
             }
-            return res;
+            return ExecutionResult(res);
         }
         },
     }

@@ -1,6 +1,4 @@
 #include <cmath>
-#include "schemeobject.h"
-#include "eval.h"
 #include "std.h"
 
 static bool is_int(std::shared_ptr<SchemeObject> p)

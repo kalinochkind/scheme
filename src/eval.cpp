@@ -1,4 +1,3 @@
-#include "eval.h"
 #include "std.h"
 #include <iostream>
 #include <regex>
@@ -29,7 +28,16 @@ static std::shared_ptr<SchemeObject> execute_pair_function(const std::string &na
     return p;
 }
 
-std::shared_ptr<SchemeObject>
+std::shared_ptr<SchemeObject> ExecutionResult::force_value()
+{
+    while(type == execution_result_t::TAIL_CALL)
+    {
+        (*this) = execute_function(tail_context->func, tail_context->args);
+    }
+    return value;
+}
+
+ExecutionResult
 execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<SchemeObject>> &val_list)
 {
     std::shared_ptr<SchemeBuiltinFunc> bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
@@ -38,10 +46,10 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
         if(SpecialFormRegistry::exists(bf->name))
             throw eval_error(bf->name + " cannot be executed this way");
         if(FunctionRegistry::exists(bf->name))
-            return FunctionRegistry::get(bf->name)(val_list);
+            return ExecutionResult(FunctionRegistry::get(bf->name)(val_list));
         if(val_list.size() != 1)
             throw eval_error(bf->name + ": one argument required");
-        return execute_pair_function(bf->name, val_list.front());
+        return ExecutionResult(execute_pair_function(bf->name, val_list.front()));
     }
     Context local_context = f->context;
     local_context.newFrame();
@@ -74,66 +82,54 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
     {
         throw eval_error("Too few arguments");
     }
-    std::shared_ptr<SchemeObject> res;
+    ExecutionResult res;
     for(auto i = f->body.begin(); i != f->body.end(); ++i)
     {
-        res = i->evaluate(local_context, std::next(i) == f->body.end() ? f : nullptr);
+        res.force_value();
+        res = i->evaluate(local_context);
     }
     return res;
 }
 
-std::shared_ptr<SchemeObject> ASTNode::evaluate(Context &context, std::shared_ptr<SchemeFunc> tail_func)
+ExecutionResult ASTNode::evaluate(Context &context)
 {
     if(type == ast_type_t::INT)
-        return std::make_shared<SchemeInt>(stoll(value));
+        return ExecutionResult(std::make_shared<SchemeInt>(stoll(value)));
     if(type == ast_type_t::FLOAT)
-        return std::make_shared<SchemeFloat>(stod(value));
+        return ExecutionResult(std::make_shared<SchemeFloat>(stod(value)));
     if(type == ast_type_t::STRING)
-        return std::make_shared<SchemeString>(value);
+        return ExecutionResult(std::make_shared<SchemeString>(value));
     if(type == ast_type_t::BOOL)
-        return std::make_shared<SchemeBool>(value == "t");
+        return ExecutionResult(std::make_shared<SchemeBool>(value == "t"));
     if(type == ast_type_t::NAME)
     {
         auto t = context.get(value);
         if(t)
-            return t;
+            return ExecutionResult(t);
         else if(SpecialFormRegistry::exists(value) || FunctionRegistry::exists(value) || pair_function(value))
-            return std::make_shared<SchemeBuiltinFunc>(value);
+            return ExecutionResult(std::make_shared<SchemeBuiltinFunc>(value));
         else
             throw eval_error("Undefined name: " + value);
     }
     if(list.empty())
         throw eval_error("Trying to evaluate empty list");
 
-    std::shared_ptr<SchemeFunc> f = std::dynamic_pointer_cast<SchemeFunc>(list.front()->evaluate(context));
+    auto f = std::dynamic_pointer_cast<SchemeFunc>(list.front()->evaluate(context).force_value());
     if(!f)
     {
         throw eval_error("Trying to call not a function");
     }
-    std::shared_ptr<SchemeBuiltinFunc> bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
+    auto bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
     if(bf && SpecialFormRegistry::exists(bf->name))
     {
         auto nl = list;
         nl.pop_front();
-        return SpecialFormRegistry::get(bf->name)(nl, context, tail_func);
+        return SpecialFormRegistry::get(bf->name)(nl, context);
     }
     std::list<std::shared_ptr<SchemeObject>> val_list;
     for(auto lit = std::next(list.begin()); lit != list.end(); ++lit)
     {
-        val_list.push_back((*lit)->evaluate(context));
+        val_list.push_back((*lit)->evaluate(context).force_value());
     }
-    if(f == tail_func)
-        throw tail_call(val_list);
-    while(true)
-    {
-        try
-        {
-            return execute_function(f, val_list);
-        }
-        catch(tail_call &e)
-        {
-            val_list = e.list;
-        }
-    }
+    return ExecutionResult(f, val_list);
 }
-

@@ -1,5 +1,4 @@
 #include "std.h"
-#include "eval.h"
 
 
 std::pair<std::shared_ptr<SchemeObject>, bool>
@@ -8,7 +7,7 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
     if(node->type == ast_type_t::STRING || node->type == ast_type_t::INT || node->type == ast_type_t::FLOAT ||
        node->type == ast_type_t::BOOL)
     {
-        return {node->evaluate(context), false};
+        return {node->evaluate(context).force_value(), false};
     }
     if(node->type == ast_type_t::NAME)
     {
@@ -24,7 +23,7 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
             {
                 if(node->list.size() != 2)
                     throw eval_error("unquote: one argument required");
-                return {node->list.back()->evaluate(context), false};
+                return {node->list.back()->evaluate(context).force_value(), false};
             }
             --quasi_level;
         }
@@ -34,7 +33,7 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
             {
                 if(node->list.size() != 2)
                     throw eval_error("unquote-splicing: one argument required");
-                return {node->list.back()->evaluate(context), true};
+                return {node->list.back()->evaluate(context).force_value(), true};
             }
             --quasi_level;
         }

@@ -1,10 +1,8 @@
 #include "std.h"
-#include "eval.h"
 
 static Package package(
     {
-        {"do",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                     std::shared_ptr<SchemeFunc> tail_func) {
+        {"do",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST || (*next(l.begin()))->type != ast_type_t::LIST)
                 throw eval_error("do: lists required");
             context_map_t new_frame;
@@ -20,24 +18,25 @@ static Package package(
                 if(new_frame.count(i->list.front()->value))
                     throw eval_error("do: duplicate variables");
                 new_frame[i->list.front()->value] = i->list.empty() ? nullptr : (*next(i->list.begin()))->evaluate(
-                    context);
+                    context).force_value();
             }
             Context local_context = context;
             local_context.newFrame(new_frame);
             while(true)
             {
                 auto cond_value = cond->list.front()->evaluate(local_context);
-                if(cond_value->toBool())
+                if(cond_value.force_value()->toBool())
                 {
                     for(auto it = next(cond->list.begin()); it != cond->list.end(); ++it)
                     {
-                        cond_value = (*it)->evaluate(local_context, next(it) == cond->list.end() ? tail_func : nullptr);
+                        cond_value.force_value();
+                        cond_value = (*it)->evaluate(local_context);
                     }
                     return cond_value;
                 }
                 for(auto it = next(next(l.begin())); it != l.end(); ++it)
                 {
-                    (*it)->evaluate(local_context);
+                    (*it)->evaluate(local_context).force_value();
                 }
                 new_frame.clear();
                 for(auto &&i : vars)
@@ -45,22 +44,21 @@ static Package package(
                     if(i->list.size() < 3)
                         new_frame[i->list.front()->value] = local_context.get(i->list.front()->value);
                     else
-                        new_frame[i->list.front()->value] = i->list.back()->evaluate(local_context);
+                        new_frame[i->list.front()->value] = i->list.back()->evaluate(local_context).force_value();
                 }
                 local_context.delFrame();
                 local_context.newFrame(new_frame);
             }
         }
         },
-        {"cond",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                     std::shared_ptr<SchemeFunc> tail_func) {
+        {"cond",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             for(auto branch : l)
             {
                 if(branch->type != ast_type_t::LIST || branch->list.size() < 1)
                     throw eval_error("cond: non-empty lists required");
-                std::shared_ptr<SchemeObject> br;
+                ExecutionResult br;
                 if((branch->list.front()->type == ast_type_t::NAME && branch->list.front()->value == "else") ||
-                   (br = branch->list.front()->evaluate(context))->toBool())
+                   (br = branch->list.front()->evaluate(context)).force_value()->toBool())
                 {
                     if(branch->list.size() == 1)
                     {
@@ -71,42 +69,39 @@ static Package package(
                     if(branch->list.size() == 3 && ((*next(branch->list.begin()))->type == ast_type_t::NAME &&
                                                     (*next(branch->list.begin()))->value == "=>"))
                     {
-                        auto func = std::dynamic_pointer_cast<SchemeFunc>(branch->list.back()->evaluate(context));
+                        auto func = std::dynamic_pointer_cast<SchemeFunc>(
+                            branch->list.back()->evaluate(context).force_value());
                         if(!func)
                             throw eval_error("cond: => requires a function");
-                        std::list<std::shared_ptr<SchemeObject>> args{br};
-                        if(func == tail_func)
-                            throw tail_call(args);
-                        return execute_function(func, args);
+                        return ExecutionResult(func, {br.value});
                     }
-                    std::shared_ptr<SchemeObject> res;
+                    ExecutionResult res;
                     for(auto i = next(branch->list.begin()); i != branch->list.end(); ++i)
                     {
-                        res = (*i)->evaluate(context, std::next(i) == branch->list.end() ? tail_func : nullptr);
+                        res.force_value();
+                        res = (*i)->evaluate(context);
                     }
                     return res;
                 }
             }
-            return scheme_empty;
+            return ExecutionResult(scheme_empty);
         }
         },
-        {"if",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                     std::shared_ptr<SchemeFunc> tail_func) {
+        {"if",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() > 3 || l.size() < 2)
                 throw eval_error("if: 2 or 3 arguments required");
-            if(l.front()->evaluate(context)->toBool())
-                return (*next(l.begin()))->evaluate(context, tail_func);
+            if(l.front()->evaluate(context).force_value()->toBool())
+                return (*next(l.begin()))->evaluate(context);
             else if(l.size() == 3)
-                return (*next(next(l.begin())))->evaluate(context, tail_func);
+                return (*next(next(l.begin())))->evaluate(context);
             else
-                return scheme_empty;
+                return ExecutionResult(scheme_empty);
         }
         },
-        {"case",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                     std::shared_ptr<SchemeFunc> tail_func) {
+        {"case",  [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.empty())
                 throw eval_error("case: argument required");
-            auto value = l.front()->evaluate(context);
+            auto value = l.front()->evaluate(context).force_value();
             for(auto it = next(l.begin()); it != l.end(); ++it)
             {
                 bool passed = false;
@@ -132,49 +127,50 @@ static Package package(
                 }
                 if(passed)
                 {
-                    auto result = scheme_empty;
+                    auto result = ExecutionResult(scheme_empty);
                     for(auto j = next((*it)->list.begin()); j != (*it)->list.end(); ++j)
                     {
-                        result = (*j)->evaluate(context, next(j) == (*it)->list.end() ? tail_func : nullptr);
+                        result.force_value();
+                        result = (*j)->evaluate(context);
                     }
                     return result;
                 }
             }
-            return scheme_empty;
+            return ExecutionResult(scheme_empty);
         }
         },
-        {"and",   [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                     std::shared_ptr<SchemeFunc> tail_func) {
+        {"and",   [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.empty())
-                return scheme_true;
-            std::shared_ptr<SchemeObject> res;
-            for(auto i = l.begin(); i != l.end(); ++i)
+                return ExecutionResult(scheme_true);
+            for(auto i = l.begin(); next(i) != l.end(); ++i)
             {
-                if(!(res = (*i)->evaluate(context, next(i) == l.end() ? tail_func : nullptr))->toBool())
-                    return scheme_false;
+                auto res = (*i)->evaluate(context).force_value();
+                if(!res->toBool())
+                    return ExecutionResult(res);
             }
-            return res;
+            return l.back()->evaluate(context);
         }
         },
-        {"or",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                     std::shared_ptr<SchemeFunc> tail_func) {
-            std::shared_ptr<SchemeObject> res;
-            for(auto i = l.begin(); i != l.end(); ++i)
+        {"or",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+            if(l.empty())
+                return ExecutionResult(scheme_false);
+            for(auto i = l.begin(); next(i) != l.end(); ++i)
             {
-                if((res = (*i)->evaluate(context, next(i) == l.end() ? tail_func : nullptr))->toBool())
-                    return res;
+                auto res = (*i)->evaluate(context).force_value();
+                if(res->toBool())
+                    return ExecutionResult(res);
             }
-            return scheme_false;
+            return l.back()->evaluate(context);
         }
         },
-        {"begin", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context,
-                     std::shared_ptr<SchemeFunc> tail_func) {
+        {"begin", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(!l.size())
                 throw eval_error("begin: at least one argument required");
-            std::shared_ptr<SchemeObject> res;
+            ExecutionResult res;
             for(auto i = l.begin(); i != l.end(); ++i)
             {
-                res = (*i)->evaluate(context, next(i) == l.end() ? tail_func : nullptr);
+                res.force_value();
+                res = (*i)->evaluate(context);
             }
             return res;
         }

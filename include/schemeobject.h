@@ -5,9 +5,66 @@
 #include <list>
 #include <memory>
 #include <map>
+#include <chrono>
+
 
 struct SchemeObject;
 struct SchemeFunc;
+
+class eval_error : public std::runtime_error
+{
+    using std::runtime_error::runtime_error;
+};
+
+extern std::chrono::milliseconds start_time;
+
+
+struct TailContext
+{
+    std::shared_ptr<SchemeFunc> func;
+    std::list<std::shared_ptr<SchemeObject>> args;
+
+    TailContext(const std::shared_ptr<SchemeFunc> func, const std::list<std::shared_ptr<SchemeObject>> args) :
+        func(func), args(args)
+    {}
+};
+
+
+enum class execution_result_t
+{
+    VALUE, TAIL_CALL, ERROR
+};
+
+struct ExecutionResult
+{
+    execution_result_t type;
+    std::shared_ptr<SchemeObject> value;
+    std::unique_ptr<TailContext> tail_context;
+
+    ExecutionResult() : type(execution_result_t::VALUE), value(nullptr), tail_context(nullptr)
+    {}
+
+    explicit ExecutionResult(const std::shared_ptr<SchemeObject> &value) : type(execution_result_t::VALUE),
+                                                                           value(value),
+                                                                           tail_context(nullptr)
+    {};
+
+    explicit ExecutionResult(const std::shared_ptr<SchemeFunc> &func,
+                             const std::list<std::shared_ptr<SchemeObject>> &args) :
+        type(execution_result_t::TAIL_CALL), value(nullptr), tail_context(std::make_unique<TailContext>(func, args))
+    {};
+
+    std::shared_ptr<SchemeObject> force_value();
+
+    /* explicit ExecutionResult(const std::string &error) : type(execution_result_t::ERROR),
+                                                          value(std::make_shared<SchemeString>(error)),
+                                                          tail_context(nullptr)
+     {};*/
+};
+
+ExecutionResult
+execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<SchemeObject>> &val_list);
+
 
 using context_map_t = std::map<std::string, std::shared_ptr<SchemeObject>>;
 
@@ -44,7 +101,7 @@ struct ASTNode
     ASTNode(): type(ast_type_t::LIST), value(), list() {};
     ASTNode(ast_type_t type, const std::string &value): type(type), value(value), list() {};
 
-    std::shared_ptr<SchemeObject> evaluate(Context &context, std::shared_ptr<SchemeFunc> tail_func = nullptr);
+    ExecutionResult evaluate(Context &context);
 
 };
 

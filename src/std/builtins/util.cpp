@@ -1,5 +1,4 @@
 #include "std.h"
-#include "eval.h"
 
 std::chrono::milliseconds get_current_time()
 {
@@ -115,7 +114,7 @@ static Package package(
             std::shared_ptr<SchemeEnvironment> e;
             if(l.size() != 2 || !(e = std::dynamic_pointer_cast<SchemeEnvironment>(l.back())))
                 throw eval_error("eval: code and environment required");
-            return l.front()->toAST()->evaluate(e->context);
+            return l.front()->toAST()->evaluate(e->context).force_value();  // tail call in eval?
         }
         },
     }
