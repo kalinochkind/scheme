@@ -166,6 +166,10 @@ static Package package(
                 return scheme_false;
         }
         },
+        {"round",     math_function("round", round)},
+        {"ceiling",   math_function("ceiling", ceil)},
+        {"truncate",  math_function("truncate", trunc)},
+        {"floor",     math_function("floor", floor)},
         {"sin",       math_function("sin", sin)},
         {"cos",       math_function("cos", cos)},
         {"exp",       math_function("exp", exp)},
@@ -183,6 +187,12 @@ static Package package(
             else
                 res = atan2(arg, get_value(l.back(), "atan: number required"));
             return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(res));
+        }
+        },
+        {"exact?",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("exact?: one argument required");
+            return is_int(l.front()) ? scheme_true : scheme_false;
         }
         },
     }

@@ -77,7 +77,15 @@ const std::string startup = "(define (> x y) (< y x)) "
         "  (cond ((null? list) false) ((eq object (car list)) list) (else (fun object (cdr list))))) fun) "
         "(define memq (member-procedure eq?)) "
         "(define member (member-procedure equal?)) "
-        "(define eqv? eq?) ";
+        "(define eqv? eq?) "
+        "(define real? number?) "
+        "(define (integer? x) (and (number? x) (= x (round x)))) "
+        "(define (inexact? x) (and (number? x) (not (exact? x)))) "
+        "(define exact-integer? exact?)"
+        "(define (exact-nonnegative-integer? x) (and (exact? x) (>= x 0))) "
+        "(define (1+ x) (+ 1 x)) "
+        "(define (-1+ x) (- x 1)) "
+        "(define (expt x y) (exp (* y (log x)))) ";
 
 
 Context initGlobalContext()
