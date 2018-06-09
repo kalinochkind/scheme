@@ -100,6 +100,9 @@ const std::string startup = "(define (> x y) (< y x)) "
         "(define char-ascii? char?) "
         "(define char->ascii char->integer) "
         "(define ascii->char integer->char) "
+        "(define (list->string l) (apply string l)) "
+        "(define (string-null? s) (eq? s \"\")) "
+        "(define string=? eq?) "
         ;
 
 
