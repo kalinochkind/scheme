@@ -53,6 +53,11 @@ void readQuoted(std::istream &is, std::shared_ptr<ASTNode> node, const std::stri
     node->list.push_back(readObject(is));
 }
 
+static char parse_oct_char(const std::string &oct)
+{
+    return ((oct[0] - '0') << 6) + ((oct[1] - '0') << 3) + (oct[2] - '0');
+}
+
 std::shared_ptr<ASTNode> readObject(std::istream &is)
 {
     auto o = std::make_shared<ASTNode>();
@@ -79,6 +84,19 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
                         o->value.push_back('\t');
                     else if(c == 'f')
                         o->value.push_back('\f');
+                    else if('0' <= c && c <= '7')
+                    {
+                        std::string oct;
+                        for(int i=0;i<2;++i)
+                        {
+                            oct.push_back(c);
+                            c = is.get();
+                            if(!('0' <= c && c <= '7'))
+                                throw parse_error("Invalid escape sequence: \\" + oct + char(c));
+                        }
+                        oct.push_back(c);
+                        o->value.push_back(parse_oct_char(oct));
+                    }
                     else
                         o->value.push_back(c);
                 }
