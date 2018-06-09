@@ -70,7 +70,7 @@ using context_map_t = std::map<std::string, std::shared_ptr<SchemeObject>>;
 
 enum class ast_type_t
 {
-    LIST, NAME, INT, FLOAT, STRING, BOOL
+    LIST, NAME, INT, FLOAT, STRING, BOOL, CHAR
 };
 
 struct Context
@@ -186,6 +186,17 @@ struct SchemeString: public SchemeObject
     std::string value;
 
     SchemeString(std::string s): value(s) {};
+
+    std::string externalRepr() const override;
+    std::shared_ptr<ASTNode> toAST() const override;
+    std::string printable() const override;
+};
+
+struct SchemeChar: public SchemeObject
+{
+    unsigned char value;
+
+    SchemeChar(unsigned char c): value(c) {};
 
     std::string externalRepr() const override;
     std::shared_ptr<ASTNode> toAST() const override;

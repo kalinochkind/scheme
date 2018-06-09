@@ -1,5 +1,6 @@
 #include <set>
 #include "std.h"
+#include "char.h"
 
 
 static std::string quote_string(const std::string &s)
@@ -103,6 +104,21 @@ std::shared_ptr<ASTNode> SchemeString::toAST() const
 std::string SchemeString::printable() const
 {
     return value;
+}
+
+std::string SchemeChar::externalRepr() const
+{
+    return std::string("#\\") + char_to_char_name(value);
+}
+
+std::shared_ptr<ASTNode> SchemeChar::toAST() const
+{
+    return std::make_shared<ASTNode>(ast_type_t::CHAR, normalize_char_name(char_to_char_name(value)));
+}
+
+std::string SchemeChar::printable() const
+{
+    return std::string(1, value);
 }
 
 std::string SchemePair::externalRepr() const

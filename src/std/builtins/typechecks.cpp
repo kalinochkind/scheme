@@ -23,6 +23,13 @@ static Package package(
             return p ? scheme_true : scheme_false;
         }
         },
+        {"char?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("char?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemeChar>(l.front());
+            return p ? scheme_true : scheme_false;
+        }
+        },
         {"number?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("number?: one argument required");

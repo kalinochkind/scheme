@@ -1,6 +1,7 @@
 #include <regex>
 #include <string>
 #include "parser.h"
+#include "char.h"
 
 ast_type_t identifier_type(const std::string &s)
 {
@@ -57,6 +58,7 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
     auto o = std::make_shared<ASTNode>();
     skip_whitespace(is);
     int c = is.get();
+    std::string charname;
     switch(c)
     {
         case EOF:
@@ -128,6 +130,24 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
                 case 'f':
                     o->type = ast_type_t::BOOL;
                     o->value = "f";
+                    return o;
+                case '\\':
+                    o->type = ast_type_t::CHAR;
+                    c = is.get();
+                    if(c == EOF)
+                        throw parse_error("Invalid character");
+                    charname.clear();
+                    charname.push_back(c);
+                    c = is.peek();
+                    while(!is_delimiter(c))
+                    {
+                        charname.push_back(c);
+                        is.get();
+                        c = is.peek();
+                    }
+                    o->value = normalize_char_name(charname);
+                    if(o->value.empty())
+                        throw parse_error("Invalid character: #\\" + charname);
                     return o;
                 default:
                     throw parse_error(std::string("Invalid sequence: #") + char(c));

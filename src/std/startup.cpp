@@ -85,7 +85,22 @@ const std::string startup = "(define (> x y) (< y x)) "
         "(define (exact-nonnegative-integer? x) (and (exact? x) (>= x 0))) "
         "(define (1+ x) (+ 1 x)) "
         "(define (-1+ x) (- x 1)) "
-        "(define (expt x y) (exp (* y (log x)))) ";
+        "(define (expt x y) (exp (* y (log x)))) "
+        "(define char=? eq?) "
+        "(define (char<? a b) (< (char->integer a) (char->integer b))) "
+        "(define (char>? a b) (char<? b a)) "
+        "(define (char<=? a b) (or (char<? a b) (char=? a b))) "
+        "(define (char>=? a b) (or (char>? a b) (char=? a b))) "
+        "(define (char-ci=? a b) (char=? (char-downcase a) (char-downcase b))) "
+        "(define (char-ci<? a b) (char<? (char-downcase a) (char-downcase b))) "
+        "(define (char-ci>? a b) (char-ci<? b a)) "
+        "(define (char-ci<=? a b) (or (char-ci<? a b) (char-ci=? a b))) "
+        "(define (char-ci>=? a b) (or (char-ci>? a b) (char-ci=? a b))) "
+        "(define char-code char->integer) "
+        "(define char-ascii? char?) "
+        "(define char->ascii char->integer) "
+        "(define ascii->char integer->char) "
+        ;
 
 
 Context initGlobalContext()

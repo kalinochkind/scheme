@@ -1,6 +1,7 @@
 #include "std.h"
 #include <iostream>
 #include <regex>
+#include "char.h"
 
 std::shared_ptr<SchemeObject> scheme_true = std::make_shared<SchemeBool>(true);
 std::shared_ptr<SchemeObject> scheme_false = std::make_shared<SchemeBool>(false);
@@ -114,6 +115,8 @@ ExecutionResult ASTNode::evaluate(Context &context)
         }
     if(type == ast_type_t::STRING)
         return ExecutionResult(std::make_shared<SchemeString>(value));
+    if(type == ast_type_t::CHAR)
+        return ExecutionResult(std::make_shared<SchemeChar>(char_name_to_char(value)));
     if(type == ast_type_t::BOOL)
         return ExecutionResult(std::make_shared<SchemeBool>(value == "t"));
     if(type == ast_type_t::NAME)

@@ -46,7 +46,12 @@ bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b)
         if(p1 && p2)
             return p1->value == p2->value;
     }
-    // TODO characters
+    {
+        auto p1 = std::dynamic_pointer_cast<SchemeChar>(a);
+        auto p2 = std::dynamic_pointer_cast<SchemeChar>(b);
+        if(p1 && p2)
+            return p1->value == p2->value;
+    }
     return false;
 }
 
