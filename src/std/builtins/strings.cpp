@@ -211,5 +211,53 @@ static Package package(
             return std::dynamic_pointer_cast<SchemeObject>(res);
         }
         },
+        {"string-search-all",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("string-search-all: two strings required");
+            auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
+            auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
+            if(!p1 || !p2)
+                throw eval_error("string-search-all: two strings required");
+            auto res = std::dynamic_pointer_cast<SchemePair>(scheme_nil);
+            size_t pos = p2->value.rfind(p1->value);
+            while(pos != std::string::npos)
+            {
+                res = std::make_shared<SchemePair>(std::make_shared<SchemeInt>(pos), res);
+                if(pos == 0)
+                    break;
+                pos = p2->value.rfind(p1->value, pos - 1);
+            }
+            return std::dynamic_pointer_cast<SchemeObject>(res);
+        }
+        },
+        {"string-match-forward",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("string-match-forward: two strings required");
+            auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
+            auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
+            if(!p1 || !p2)
+                throw eval_error("string-match-forward: two strings required");
+            size_t pos = 0;
+            while(pos < p1->value.length() && pos < p2->value.length() && p1->value[pos] == p2->value[pos])
+                ++pos;
+            auto res = std::make_shared<SchemeInt>(pos);
+            return std::dynamic_pointer_cast<SchemeObject>(res);
+        }
+        },
+        {"string-match-backward",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("string-match-backward: two strings required");
+            auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
+            auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
+            if(!p1 || !p2)
+                throw eval_error("string-match-backward: two strings required");
+            size_t pos = 0;
+            while(pos < p1->value.length() && pos < p2->value.length() &&
+                  p1->value[p1->value.length() - 1 - pos] == p2->value[p2->value.length() - 1 - pos])
+                ++pos;
+            auto res = std::make_shared<SchemeInt>(pos);
+            return std::dynamic_pointer_cast<SchemeObject>(res);
+        }
+        },
     }
 );
