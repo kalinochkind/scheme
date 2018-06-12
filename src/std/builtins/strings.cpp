@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "std.h"
 
 static Package package(
@@ -257,6 +258,31 @@ static Package package(
                 ++pos;
             auto res = std::make_shared<SchemeInt>(pos);
             return std::dynamic_pointer_cast<SchemeObject>(res);
+        }
+        },
+        {"reverse-substring!",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 3)
+                throw eval_error("reverse-substring!: string and indices required");
+            auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
+            auto bp = std::dynamic_pointer_cast<SchemeInt>(*next(l.begin()));
+            auto ep = std::dynamic_pointer_cast<SchemeInt>(l.back());
+            if(!sp || !bp || !ep)
+                throw eval_error("reverse-substring!: string and indices required");
+            if(ep->value > (int) sp->value.length() || bp->value < 0 || ep->value < bp->value)
+                throw eval_error("reverse-substring!: invalid range");
+            std::reverse(sp->value.begin() + bp->value, sp->value.begin() + ep->value);
+            return l.front();
+        }
+        },
+        {"set-string-length!",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("set-string-length!: string and length required");
+            auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
+            auto ip = std::dynamic_pointer_cast<SchemeInt>(l.back());
+            if(!sp || !ip || ip->value < 0)
+                throw eval_error("set-string-length!: string and length required");
+            sp->value.resize(ip->value);
+            return scheme_empty;
         }
         },
     }
