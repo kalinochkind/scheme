@@ -1,6 +1,15 @@
 #include "std.h"
 
 
+void prepend_value(std::shared_ptr<SchemePair> &lst, const std::shared_ptr<SchemeObject> &obj, bool &dotted)
+{
+    if(dotted)
+        lst->car = obj;
+    else
+        lst = std::make_shared<SchemePair>(obj, lst);
+    dotted = false;
+}
+
 std::pair<std::shared_ptr<SchemeObject>, bool>
 do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
 {
@@ -13,7 +22,7 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
     {
         return {std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeName>(node->value)), false};
     }
-    auto lst = scheme_nil;
+    auto lst = std::dynamic_pointer_cast<SchemePair>(scheme_nil);
     if(quasi_level > 0 && node->list.size() && node->list.front()->type == ast_type_t::NAME)
     {
         auto head = node->list.front()->value;
@@ -40,6 +49,8 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
         else if(head == "quasiquote")
             ++quasi_level;
     }
+    int taken = 0;
+    bool dotted = false;
     for(auto i = node->list.rbegin(); i != node->list.rend(); ++i)
     {
         auto quoted = do_quote(*i, context, quasi_level);
@@ -55,10 +66,24 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
                 quoted.first = sublst->cdr;
             }
             for(auto j = to_insert.rbegin(); j != to_insert.rend(); ++j)
-                lst = std::make_shared<SchemePair>(*j, lst);
+            {
+                prepend_value(lst, *j, dotted);
+                ++taken;
+            }
+        }
+        else if((*i)->type == ast_type_t::NAME && (*i)->value == ".")
+        {
+            if(taken != 1)
+                throw eval_error("Invalid dotted sequence");
+            std::swap(lst->car, lst->cdr);
+            dotted = true;
+            ++taken;
         }
         else
-            lst = std::make_shared<SchemePair>(quoted.first, lst);
+        {
+            prepend_value(lst, quoted.first, dotted);
+            ++taken;
+        }
     }
     return {std::dynamic_pointer_cast<SchemeObject>(lst), false};
 }
