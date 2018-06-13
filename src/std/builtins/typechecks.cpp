@@ -1,3 +1,4 @@
+#include <set>
 #include "std.h"
 
 static Package package(
@@ -45,6 +46,24 @@ static Package package(
                 throw eval_error("environment?: one argument required");
             auto p = std::dynamic_pointer_cast<SchemeEnvironment>(l.front());
             return p ? scheme_true : scheme_false;
+        }
+        },
+        {"list?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("list?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
+            std::set<SchemePair*> visited{p.get()};
+            while(true)
+            {
+                if(!p)
+                    return scheme_false;
+                if(p == scheme_nil)
+                    return scheme_true;
+                p = std::dynamic_pointer_cast<SchemePair>(p->cdr);
+                if(visited.count(p.get()))
+                    return scheme_false;
+                visited.insert(p.get());
+            }
         }
         },
     }
