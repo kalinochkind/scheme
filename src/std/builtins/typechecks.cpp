@@ -52,18 +52,7 @@ static Package package(
             if(l.size() != 1)
                 throw eval_error("list?: one argument required");
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
-            std::set<SchemePair*> visited{p.get()};
-            while(true)
-            {
-                if(!p)
-                    return scheme_false;
-                if(p == scheme_nil)
-                    return scheme_true;
-                p = std::dynamic_pointer_cast<SchemePair>(p->cdr);
-                if(visited.count(p.get()))
-                    return scheme_false;
-                visited.insert(p.get());
-            }
+            return p && p->listLength() >= 0 ? scheme_true : scheme_false;
         }
         },
     }

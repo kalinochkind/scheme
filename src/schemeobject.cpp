@@ -177,6 +177,23 @@ std::shared_ptr<ASTNode> SchemePair::toAST() const
     return a;
 }
 
+long long SchemePair::listLength() const
+{
+    const SchemePair *p = this;
+    std::set<const SchemePair*> visited{p};
+    for(long long ans=0;;++ans)
+    {
+        if(!p)
+            return -1;
+        if(p == scheme_nil.get())
+            return ans;
+        p = std::dynamic_pointer_cast<SchemePair>(p->cdr).get();
+        if(visited.count(p))
+            return -2;
+        visited.insert(p);
+    }
+}
+
 std::string SchemeName::externalRepr() const
 {
     return value;

@@ -211,6 +211,8 @@ struct SchemePair: public SchemeObject
 
     std::string externalRepr() const override;
     std::shared_ptr<ASTNode> toAST() const override;
+
+    long long listLength() const;
 };
 
 struct SchemeName: public SchemeObject
