@@ -48,6 +48,27 @@ static Package package(
             return p ? scheme_true : scheme_false;
         }
         },
+        {"boolean?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("boolean?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemeBool>(l.front());
+            return p ? scheme_true : scheme_false;
+        }
+        },
+        {"vector?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("vector?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemeVector>(l.front());
+            return p ? scheme_true : scheme_false;
+        }
+        },
+        {"procedure?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("procedure?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemeFunc>(l.front());
+            return p ? scheme_true : scheme_false;
+        }
+        },
         {"list?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("list?: one argument required");
