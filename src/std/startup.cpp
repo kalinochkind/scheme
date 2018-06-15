@@ -230,6 +230,13 @@ const std::string startup = "(define (> x y) (< y x)) "
         "  (if (or (cmp key (unwrap found)) (cmp (unwrap found) key)) #f found)))) "
         "(define (vector-head v e) (subvector v 0 e)) "
         "(define (vector-tail v s) (subvector v s (vector-length v))) "
+        "(define (subvector-fill! vec a b obj) (do ((i a (1+ i))) ((= i b)) (vector-set! vec i obj)) vec)"
+        "(define (vector-fill! vec obj) (subvector-fill! vec 0 (vector-length vec) obj)) "
+        "(define (subvector-move-left! v1 a b v2 d) "
+        "  (do ((i a (1+ i)) (j d (1+ j))) ((= i b)) (vector-set! v2 j (vector-ref v1 i))) v2) "
+        "(define (subvector-move-right! v1 a b v2 d) "
+        "  (do ((i (-1+ b) (-1+ i)) (j (- d 1 (- a b)) (-1+ j))) ((< i a)) (vector-set! v2 j (vector-ref v1 i))) v2) "
+        "(define sort! merge-sort!) "
         ;
 
 

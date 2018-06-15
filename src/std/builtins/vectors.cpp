@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "std.h"
 
 static Package package(
@@ -86,7 +87,7 @@ static Package package(
             return scheme_empty;
         }
         },
-        {"subvector",              [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"subvector",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 3)
                 throw eval_error("subvector: vector and indices required");
             auto vp = std::dynamic_pointer_cast<SchemeVector>(l.front());
@@ -100,6 +101,34 @@ static Package package(
             ns->vec = std::vector<std::shared_ptr<SchemeObject>>(
                 vp->vec.begin() + bp->value, vp->vec.begin() + ep->value);
             return std::dynamic_pointer_cast<SchemeObject>(ns);
+        }
+        },
+        {"quick-sort!",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("quick-sort!: vector and comparator required");
+            auto vp = std::dynamic_pointer_cast<SchemeVector>(l.front());
+            auto cp = std::dynamic_pointer_cast<SchemeFunc>(l.back());
+            if(!vp || !cp)
+                throw eval_error("quick-sort!: vector and comparator required");
+            std::sort(vp->vec.begin(), vp->vec.end(),
+                      [cp](const std::shared_ptr<SchemeObject> &a, const std::shared_ptr<SchemeObject> &b) {
+                          return execute_function(cp, {a, b}).force_value()->toBool();
+                      });
+            return l.front();
+        }
+        },
+        {"merge-sort!",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 2)
+                throw eval_error("merge-sort!: vector and comparator required");
+            auto vp = std::dynamic_pointer_cast<SchemeVector>(l.front());
+            auto cp = std::dynamic_pointer_cast<SchemeFunc>(l.back());
+            if(!vp || !cp)
+                throw eval_error("merge-sort!: vector and comparator required");
+            std::stable_sort(vp->vec.begin(), vp->vec.end(),
+                             [cp](const std::shared_ptr<SchemeObject> &a, const std::shared_ptr<SchemeObject> &b) {
+                                 return execute_function(cp, {a, b}).force_value()->toBool();
+                             });
+            return l.front();
         }
         },
     }
