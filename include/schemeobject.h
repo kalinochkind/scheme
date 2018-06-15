@@ -6,6 +6,7 @@
 #include <memory>
 #include <map>
 #include <chrono>
+#include <vector>
 
 
 struct SchemeObject;
@@ -70,7 +71,7 @@ using context_map_t = std::map<std::string, std::shared_ptr<SchemeObject>>;
 
 enum class ast_type_t
 {
-    LIST, NAME, INT, FLOAT, STRING, BOOL, CHAR
+    LIST, NAME, INT, FLOAT, STRING, BOOL, CHAR, VECTOR
 };
 
 struct Context
@@ -213,6 +214,20 @@ struct SchemePair: public SchemeObject
     std::shared_ptr<ASTNode> toAST() const override;
 
     long long listLength() const;
+};
+
+struct SchemeVector: public SchemeObject
+{
+    std::vector<std::shared_ptr<SchemeObject>> vec;
+
+    SchemeVector(): vec() {};
+    static std::shared_ptr<SchemeVector> fromList(std::shared_ptr<SchemePair> list);
+
+    std::shared_ptr<SchemePair> toList() const;
+
+    std::string externalRepr() const override;
+    std::shared_ptr<ASTNode> toAST() const override;
+
 };
 
 struct SchemeName: public SchemeObject

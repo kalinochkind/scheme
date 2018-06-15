@@ -85,5 +85,7 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
             ++taken;
         }
     }
+    if(node->type == ast_type_t::VECTOR)
+        return {std::dynamic_pointer_cast<SchemeObject>(SchemeVector::fromList(lst)), false};
     return {std::dynamic_pointer_cast<SchemeObject>(lst), false};
 }

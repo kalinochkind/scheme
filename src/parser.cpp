@@ -53,6 +53,21 @@ void readQuoted(std::istream &is, std::shared_ptr<ASTNode> node, const std::stri
     node->list.push_back(readObject(is));
 }
 
+void readList(std::istream &is, const std::shared_ptr<ASTNode> &node)
+{
+    node->type = ast_type_t::LIST;
+    skip_whitespace(is);
+    int c = is.peek();
+    while(c != EOF && c != ')')
+    {
+        node->list.push_back(readObject(is));
+        c = skip_whitespace(is);
+    }
+    if(c == EOF)
+        throw parse_error("Unclosed list literal");
+    is.get();
+}
+
 static char parse_oct_char(const std::string &oct)
 {
     return ((oct[0] - '0') << 6) + ((oct[1] - '0') << 3) + (oct[2] - '0');
@@ -108,17 +123,7 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
                 throw parse_error("Unclosed string literal");
             return o;
         case '(':
-            o->type = ast_type_t::LIST;
-            skip_whitespace(is);
-            c = is.peek();
-            while(c != EOF && c != ')')
-            {
-                o->list.push_back(readObject(is));
-                c = skip_whitespace(is);
-            }
-            if(c == EOF)
-                throw parse_error("Unclosed list literal");
-            is.get();
+            readList(is, o);
             return o;
         case '\'':
             readQuoted(is, o, "quote");
@@ -166,6 +171,10 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
                     o->value = normalize_char_name(charname);
                     if(o->value.empty())
                         throw parse_error("Invalid character: #\\" + charname);
+                    return o;
+                case '(':
+                    readList(is, o);
+                    o->type = ast_type_t::VECTOR;
                     return o;
                 default:
                     throw parse_error(std::string("Invalid sequence: #") + char(c));

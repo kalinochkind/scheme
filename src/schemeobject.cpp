@@ -194,6 +194,45 @@ long long SchemePair::listLength() const
     }
 }
 
+std::shared_ptr<SchemeVector> SchemeVector::fromList(std::shared_ptr<SchemePair> list)
+{
+    auto v = std::make_shared<SchemeVector>();
+    std::set<const SchemePair *> visited{list.get()};
+    while(list && list != scheme_nil)
+    {
+        v->vec.push_back(list->car);
+        list = std::dynamic_pointer_cast<SchemePair>(list->cdr);
+        if(visited.count(list.get()))
+            throw eval_error("Vector initialization failed: not a list");
+        visited.insert(list.get());
+    }
+    if(!list)
+        throw eval_error("Vector initialization failed: not a list");
+    return v;
+}
+
+std::shared_ptr<SchemePair> SchemeVector::toList() const
+{
+    auto l = std::dynamic_pointer_cast<SchemePair>(scheme_nil);
+    for(auto it=vec.rbegin(); it != vec.rend(); ++it)
+    {
+        l = std::make_shared<SchemePair>(*it, l);
+    }
+    return l;
+}
+
+std::string SchemeVector::externalRepr() const
+{
+    return "#" + toList()->externalRepr();
+}
+
+std::shared_ptr<ASTNode> SchemeVector::toAST() const
+{
+    auto a = toList()->toAST();
+    a->type = ast_type_t::VECTOR;
+    return a;
+}
+
 std::string SchemeName::externalRepr() const
 {
     return value;

@@ -129,6 +129,8 @@ ExecutionResult ASTNode::evaluate(Context &context)
         else
             throw eval_error("Undefined name: " + value);
     }
+    if(type == ast_type_t::VECTOR)
+        throw eval_error("Trying to evaluate a vector");
     if(list.empty())
         throw eval_error("Trying to evaluate empty list");
 
