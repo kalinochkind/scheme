@@ -9,6 +9,8 @@ const std::string startup = "(define (> x y) (< y x)) "
         "(define true #t) "
         "(define false #f) "
         "(define (not x) (if x #f #t)) "
+        "(define false? not) "
+        "(define boolean=? eq?) "
         "(define (abs x) (if (< x 0) (- x) x)) "
         "(define (positive? x) (> x 0)) "
         "(define (negative? x) (< x 0)) "
@@ -237,6 +239,8 @@ const std::string startup = "(define (> x y) (< y x)) "
         "(define (subvector-move-right! v1 a b v2 d) "
         "  (do ((i (-1+ b) (-1+ i)) (j (- d 1 (- a b)) (-1+ j))) ((< i a)) (vector-set! v2 j (vector-ref v1 i))) v2) "
         "(define sort! merge-sort!) "
+        "(define (boolean/and . args) (if (fold-left (lambda (a b) (and a b)) #t args) #t #f)) "
+        "(define (boolean/or . args) (if (fold-left (lambda (a b) (or a b)) #f args) #t #f)) "
         ;
 
 
