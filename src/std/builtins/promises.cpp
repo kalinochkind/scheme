@@ -8,7 +8,7 @@ static FunctionPackage package(
             auto t = std::dynamic_pointer_cast<SchemePromise>(l.front());
             if(!t)
                 return l.front();
-            return std::dynamic_pointer_cast<SchemeObject>(t->force());
+            return to_object(t->force());
         }
         },
         {"promise-forced?", [](const std::list<std::shared_ptr<SchemeObject>> &l) {

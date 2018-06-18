@@ -303,4 +303,9 @@ struct SchemeEnvironment : public SchemeObject
 std::pair<std::shared_ptr<SchemeObject>, bool>
 do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level);
 
+inline std::shared_ptr<SchemeObject> to_object(const std::shared_ptr<SchemeObject> &a)
+{
+    return a;
+}
+
 #endif

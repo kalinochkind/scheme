@@ -47,8 +47,7 @@ bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b)
 static FunctionPackage package(
     {
         {"runtime",  [](const std::list<std::shared_ptr<SchemeObject>> &) {
-            return std::dynamic_pointer_cast<SchemeObject>(
-                std::make_shared<SchemeInt>((get_current_time() - start_time).count()));
+            return to_object(std::make_shared<SchemeInt>((get_current_time() - start_time).count()));
         }
         },
         {"error",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -64,8 +63,7 @@ static FunctionPackage package(
         {"cons",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 2)
                 throw eval_error("cons: 2 arguments required");
-            return std::dynamic_pointer_cast<SchemeObject>(
-                std::make_shared<SchemePair>(l.front(), l.back()));
+            return to_object(std::make_shared<SchemePair>(l.front(), l.back()));
         }
         },
         {"eq?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -99,6 +97,26 @@ static FunctionPackage package(
             if(l.size() != 2 || !(e = std::dynamic_pointer_cast<SchemeEnvironment>(l.back())))
                 throw eval_error("eval: code and environment required");
             return l.front()->toAST()->evaluate(e->context).force_value();  // tail call in eval?
+        }
+        },
+        {"apply",           [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() < 2)
+                throw eval_error("apply: function and list of arguments required");
+            auto f = std::dynamic_pointer_cast<SchemeFunc>(l.front());
+            auto tail = std::dynamic_pointer_cast<SchemePair>(l.back());
+            if(!f || !tail)
+                throw eval_error("apply: function and list of arguments required");
+            std::list<std::shared_ptr<SchemeObject>> args;
+            for(auto i = next(l.begin()); next(i) != l.end(); ++i)
+                args.push_back(*i);
+            while(tail && tail != scheme_nil)
+            {
+                args.push_back(tail->car);
+                tail = std::dynamic_pointer_cast<SchemePair>(tail->cdr);
+            }
+            if(!tail)
+                throw eval_error("apply: invalid list");
+            return ExecutionResult(f, args);
         }
         },
     }

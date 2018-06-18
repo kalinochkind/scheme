@@ -35,11 +35,11 @@ math_function(const std::string &name, double (*fun)(double))
         if(l.size() != 1)
             throw eval_error(name + ": number required");
         double arg = get_value(l.front(), name + ": number required");
-        return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(fun(arg)));
+        return to_object(std::make_shared<SchemeFloat>(fun(arg)));
     };
 }
 
-static std::shared_ptr<SchemeObject> fold(const std::list<std::shared_ptr<SchemeObject>> &l, long long start,
+static ExecutionResult fold(const std::list<std::shared_ptr<SchemeObject>> &l, long long start,
                                           long long (*llf)(long long, long long), double (*df)(double, double),
                                           bool start_with_first = false)
 {
@@ -82,9 +82,9 @@ static std::shared_ptr<SchemeObject> fold(const std::list<std::shared_ptr<Scheme
         }
     }
     if(is_double)
-        return std::make_shared<SchemeFloat>(d);
+        return to_object(std::make_shared<SchemeFloat>(d));
     else
-        return std::make_shared<SchemeInt>(n);
+        return to_object(std::make_shared<SchemeInt>(n));
 }
 
 
@@ -115,7 +115,7 @@ static FunctionPackage package(
                 auto val = get_value(l.front(), "/: numbers required");
                 if(val == 0)
                     throw eval_error("Division by zero");
-                return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(1 / val));
+                return to_object(std::make_shared<SchemeFloat>(1 / val));
             }
             double val = get_value(l.front(), "/: numbers required");
             for(auto it = next(l.begin()); it != l.end(); ++it)
@@ -125,7 +125,7 @@ static FunctionPackage package(
                     throw eval_error("Division by zero");
                 val /= d;
             }
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(val));
+            return to_object(std::make_shared<SchemeFloat>(val));
         }
         },
         {"quotient",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -137,7 +137,7 @@ static FunctionPackage package(
                 throw eval_error("quotient: two ints required");
             if(b->value == 0)
                 throw eval_error("Division by zero");
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(a->value / b->value));
+            return to_object(std::make_shared<SchemeInt>(a->value / b->value));
         }
         },
         {"remainder",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -149,7 +149,7 @@ static FunctionPackage package(
                 throw eval_error("remainder: two ints required");
             if(b->value == 0)
                 throw eval_error("Division by zero");
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(a->value % b->value));
+            return to_object(std::make_shared<SchemeInt>(a->value % b->value));
         }
         },
         {"modulo",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -166,7 +166,7 @@ static FunctionPackage package(
                 res = (b->value - (-a->value % b->value)) % b->value;
             else
                 res = a->value % b->value;
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(res));
+            return to_object(std::make_shared<SchemeInt>(res));
         }
         },
         {"random",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -176,13 +176,13 @@ static FunctionPackage package(
             {
                 long long max = get_int(l.front(), "");
                 long long res = max ? (rand() * 1ll * RAND_MAX + rand()) % max : 0;
-                return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(res));
+                return to_object(std::make_shared<SchemeInt>(res));
             }
             else if(is_float(l.front()))
             {
                 double max = get_value(l.front(), "");
                 double res = (rand() * 1ll * RAND_MAX + rand()) / (RAND_MAX * 1. * RAND_MAX) * max;
-                return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(res));
+                return to_object(std::make_shared<SchemeFloat>(res));
             }
             else
                 throw eval_error("random: a number required");
@@ -228,7 +228,7 @@ static FunctionPackage package(
                 res = atan(arg);
             else
                 res = atan2(arg, get_value(l.back(), "atan: number required"));
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(res));
+            return to_object(std::make_shared<SchemeFloat>(res));
         }
         },
         {"exact?",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -240,7 +240,7 @@ static FunctionPackage package(
         {"number->string", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1 || !(is_int(l.front()) || is_float(l.front())))
                 throw eval_error("number->string: a number required");
-            return std::make_shared<SchemeString>(l.front()->externalRepr());
+            return to_object(std::make_shared<SchemeString>(l.front()->externalRepr()));
         }
         },
         {"string->number", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -251,9 +251,9 @@ static FunctionPackage package(
             try
             {
                 if(type == ast_type_t::INT)
-                    return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(stoll(s->value)));
+                    return to_object(std::make_shared<SchemeInt>(stoll(s->value)));
                 else if(type == ast_type_t::FLOAT)
-                    return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeFloat>(stod(s->value)));
+                    return to_object(std::make_shared<SchemeFloat>(stod(s->value)));
                 else
                     return scheme_false;
             }

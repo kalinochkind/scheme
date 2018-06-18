@@ -8,7 +8,7 @@ static FunctionPackage package(
             auto sp = std::dynamic_pointer_cast<SchemeSymbol>(l.front());
             if(!sp)
                 throw eval_error("symbol->string: a symbol required");
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeString>(sp->value));
+            return to_object(std::make_shared<SchemeString>(sp->value));
         }
         },
         {"string->symbol",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -17,7 +17,7 @@ static FunctionPackage package(
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             if(!sp)
                 throw eval_error("string->symbol: a string required");
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeSymbol>(sp->value));
+            return to_object(std::make_shared<SchemeSymbol>(sp->value));
         }
         },
         {"string->uninterned-symbol",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -28,7 +28,7 @@ static FunctionPackage package(
                 throw eval_error("string->uninterned-symbol: a string required");
             auto res = std::make_shared<SchemeSymbol>(sp->value);
             res->uninterned = true;
-            return std::dynamic_pointer_cast<SchemeObject>(res);
+            return to_object(res);
         }
         },
         {"generate-uninterned-symbol",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -57,7 +57,7 @@ static FunctionPackage package(
             }
             auto res = std::make_shared<SchemeSymbol>(prefix + std::to_string(SchemeSymbol::uninterned_counter++));
             res->uninterned = true;
-            return std::dynamic_pointer_cast<SchemeObject>(res);
+            return to_object(res);
         }
         },
     }

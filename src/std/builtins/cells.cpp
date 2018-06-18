@@ -5,7 +5,7 @@ static FunctionPackage package(
         {"make-cell",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("make-cell: one argument required");
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeCell>(l.front()));
+            return to_object(std::make_shared<SchemeCell>(l.front()));
         }
         },
         {"cell-contents", [](const std::list<std::shared_ptr<SchemeObject>> &l) {

@@ -17,7 +17,7 @@ static FunctionPackage package(
             }
             auto vec = std::make_shared<SchemeVector>();
             vec->vec.resize(len, c);
-            return std::dynamic_pointer_cast<SchemeObject>(vec);
+            return to_object(vec);
         }
         },
         {"list->vector",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -27,7 +27,7 @@ static FunctionPackage package(
             if(!lp)
                 throw eval_error("list->vector: list required");
             auto vec = SchemeVector::fromList(lp);
-            return std::dynamic_pointer_cast<SchemeObject>(vec);
+            return to_object(vec);
         }
         },
         {"vector->list",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -37,7 +37,7 @@ static FunctionPackage package(
             if(!lp)
                 throw eval_error("vector->list: vector required");
             auto lst = lp->toList();
-            return std::dynamic_pointer_cast<SchemeObject>(lst);
+            return to_object(lst);
         }
         },
         {"vector-grow",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -50,7 +50,7 @@ static FunctionPackage package(
             auto np = std::make_shared<SchemeVector>();
             np->vec = vp->vec;
             np->vec.resize(lp->value, scheme_empty);
-            return std::dynamic_pointer_cast<SchemeObject>(np);
+            return to_object(np);
         }
         },
         {"vector-length", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -59,7 +59,7 @@ static FunctionPackage package(
             auto lp = std::dynamic_pointer_cast<SchemeVector>(l.front());
             if(!lp)
                 throw eval_error("vector-length: vector required");
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(lp->vec.size()));
+            return to_object(std::make_shared<SchemeInt>(lp->vec.size()));
         }
         },
         {"vector-ref",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -100,7 +100,7 @@ static FunctionPackage package(
             auto ns = std::make_shared<SchemeVector>();
             ns->vec = std::vector<std::shared_ptr<SchemeObject>>(
                 vp->vec.begin() + bp->value, vp->vec.begin() + ep->value);
-            return std::dynamic_pointer_cast<SchemeObject>(ns);
+            return to_object(ns);
         }
         },
         {"quick-sort!",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {

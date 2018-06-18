@@ -10,7 +10,7 @@ static FunctionPackage package(
             long long len;
             if(!p || (len = p->listLength()) < 0)
                 throw eval_error("length: a list required");
-            return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeInt>(len));
+            return to_object(std::make_shared<SchemeInt>(len));
         }
         },
         {"list-head", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -35,7 +35,7 @@ static FunctionPackage package(
                 cl->cdr = node;
                 cl = node;
             }
-            return std::dynamic_pointer_cast<SchemeObject>(nl);
+            return to_object(nl);
         }
         },
     }

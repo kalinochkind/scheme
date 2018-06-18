@@ -21,7 +21,7 @@ static FunctionPackage package(
             auto p = std::dynamic_pointer_cast<SchemeChar>(l.front());
             if(!p)
                 throw eval_error("char->name: a char required");
-            return std::make_shared<SchemeString>(char_to_char_name(p->value));
+            return to_object(std::make_shared<SchemeString>(char_to_char_name(p->value)));
         }
         },
         {"name->char",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -32,7 +32,7 @@ static FunctionPackage package(
                 throw eval_error("name->char: a string required");
             if(normalize_char_name(p->value).empty())
                 throw eval_error("name->char: invalid name: '" + p->value + "'");
-            return std::make_shared<SchemeChar>(char_name_to_char(p->value));
+            return to_object(std::make_shared<SchemeChar>(char_name_to_char(p->value)));
         }
         },
         {"char-upcase",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -41,7 +41,7 @@ static FunctionPackage package(
             auto p = std::dynamic_pointer_cast<SchemeChar>(l.front());
             if(!p)
                 throw eval_error("char-upcase: a char required");
-            return std::make_shared<SchemeChar>(toupper(p->value));
+            return to_object(std::make_shared<SchemeChar>(toupper(p->value)));
         }
         },
         {"char-downcase",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -50,7 +50,7 @@ static FunctionPackage package(
             auto p = std::dynamic_pointer_cast<SchemeChar>(l.front());
             if(!p)
                 throw eval_error("char-downcase: a char required");
-            return std::make_shared<SchemeChar>(tolower(p->value));
+            return to_object(std::make_shared<SchemeChar>(tolower(p->value)));
         }
         },
         {"char->integer",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -59,7 +59,7 @@ static FunctionPackage package(
             auto p = std::dynamic_pointer_cast<SchemeChar>(l.front());
             if(!p)
                 throw eval_error("char->integer: a char required");
-            return std::make_shared<SchemeInt>(p->value);
+            return to_object(std::make_shared<SchemeInt>(p->value));
         }
         },
         {"integer->char",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -68,7 +68,7 @@ static FunctionPackage package(
             auto p = std::dynamic_pointer_cast<SchemeInt>(l.front());
             if(!p)
                 throw eval_error("integer->char: an integer required");
-            return std::make_shared<SchemeChar>(p->value & 0x7f);
+            return to_object(std::make_shared<SchemeChar>(p->value & 0x7f));
 
         }
         },

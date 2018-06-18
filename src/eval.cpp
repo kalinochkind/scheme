@@ -47,7 +47,7 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
         if(SpecialFormRegistry::exists(bf->name))
             throw eval_error(bf->name + " cannot be executed this way");
         if(FunctionRegistry::exists(bf->name))
-            return ExecutionResult(FunctionRegistry::get(bf->name)(val_list));
+            return FunctionRegistry::get(bf->name)(val_list);
         if(val_list.size() != 1)
             throw eval_error(bf->name + ": one argument required");
         return ExecutionResult(execute_pair_function(bf->name, val_list.front()));

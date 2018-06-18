@@ -32,7 +32,7 @@ make_function(const std::string &name, const std::list<std::shared_ptr<ASTNode>>
         f->body.push_back(**i);
     }
     f->context = context;
-    return std::dynamic_pointer_cast<SchemeObject>(f);
+    return f;
 }
 
 

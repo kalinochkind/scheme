@@ -20,7 +20,7 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
     }
     if(node->type == ast_type_t::NAME)
     {
-        return {std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeSymbol>(node->value)), false};
+        return {to_object(std::make_shared<SchemeSymbol>(node->value)), false};
     }
     auto lst = std::dynamic_pointer_cast<SchemePair>(scheme_nil);
     if(quasi_level > 0 && node->list.size() && node->list.front()->type == ast_type_t::NAME)
@@ -86,6 +86,6 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
         }
     }
     if(node->type == ast_type_t::VECTOR)
-        return {std::dynamic_pointer_cast<SchemeObject>(SchemeVector::fromList(lst)), false};
-    return {std::dynamic_pointer_cast<SchemeObject>(lst), false};
+        return {to_object(SchemeVector::fromList(lst)), false};
+    return {to_object(lst), false};
 }

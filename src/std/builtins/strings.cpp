@@ -20,7 +20,7 @@ static FunctionPackage package(
             }
             auto str = std::make_shared<SchemeString>("");
             str->value.resize(len, c);
-            return std::dynamic_pointer_cast<SchemeObject>(str);
+            return to_object(str);
         }
         },
         {"string",                 [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -34,7 +34,7 @@ static FunctionPackage package(
                     throw eval_error("string: chars required");
                 str->value[idx++] = cp->value;
             }
-            return std::dynamic_pointer_cast<SchemeObject>(str);
+            return to_object(str);
         }
         },
         {"string->list",           [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -48,7 +48,7 @@ static FunctionPackage package(
             {
                 lst = std::make_shared<SchemePair>(std::make_shared<SchemeChar>(*it), lst);
             }
-            return std::dynamic_pointer_cast<SchemeObject>(lst);
+            return to_object(lst);
         }
         },
         {"string-length",          [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -58,7 +58,7 @@ static FunctionPackage package(
             if(!sp)
                 throw eval_error("string-length: a string required");
             auto len = std::make_shared<SchemeInt>(sp->value.length());
-            return std::dynamic_pointer_cast<SchemeObject>(len);
+            return to_object(len);
         }
         },
         {"string-ref",             [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -71,7 +71,7 @@ static FunctionPackage package(
             if(ip->value < 0 || ip->value >= (int) sp->value.length())
                 throw eval_error("string-ref: out of range");
             auto ch = std::make_shared<SchemeChar>(sp->value[ip->value]);
-            return std::dynamic_pointer_cast<SchemeObject>(ch);
+            return to_object(ch);
         }
         },
         {"string-set!",            [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -99,7 +99,7 @@ static FunctionPackage package(
             if(ep->value > (int) sp->value.length() || bp->value < 0 || ep->value < bp->value)
                 throw eval_error("substring: invalid range");
             auto ns = std::make_shared<SchemeString>(sp->value.substr(bp->value, ep->value - bp->value));
-            return std::dynamic_pointer_cast<SchemeObject>(ns);
+            return to_object(ns);
         }
         },
         {"string-append",          [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -112,7 +112,7 @@ static FunctionPackage package(
                 res += p->value;
             }
             auto s = std::make_shared<SchemeString>(res);
-            return std::dynamic_pointer_cast<SchemeObject>(s);
+            return to_object(s);
         }
         },
         {"string-pad-left",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -136,7 +136,7 @@ static FunctionPackage package(
             else
                 res = sp->value.substr(sp->value.length() - lp->value);
             auto str = std::make_shared<SchemeString>(res);
-            return std::dynamic_pointer_cast<SchemeObject>(str);
+            return to_object(str);
         }
         },
         {"string-pad-right",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -160,7 +160,7 @@ static FunctionPackage package(
             else
                 res = sp->value.substr(0, lp->value);
             auto str = std::make_shared<SchemeString>(res);
-            return std::dynamic_pointer_cast<SchemeObject>(str);
+            return to_object(str);
         }
         },
         {"string=?",               [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -194,7 +194,7 @@ static FunctionPackage package(
             if(pos == std::string::npos)
                 return scheme_false;
             auto res = std::make_shared<SchemeInt>(pos);
-            return std::dynamic_pointer_cast<SchemeObject>(res);
+            return to_object(res);
         }
         },
         {"string-search-backward", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -209,7 +209,7 @@ static FunctionPackage package(
                 return scheme_false;
             pos += p1->value.length();
             auto res = std::make_shared<SchemeInt>(pos);
-            return std::dynamic_pointer_cast<SchemeObject>(res);
+            return to_object(res);
         }
         },
         {"string-search-all",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -228,7 +228,7 @@ static FunctionPackage package(
                     break;
                 pos = p2->value.rfind(p1->value, pos - 1);
             }
-            return std::dynamic_pointer_cast<SchemeObject>(res);
+            return to_object(res);
         }
         },
         {"string-match-forward",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -242,7 +242,7 @@ static FunctionPackage package(
             while(pos < p1->value.length() && pos < p2->value.length() && p1->value[pos] == p2->value[pos])
                 ++pos;
             auto res = std::make_shared<SchemeInt>(pos);
-            return std::dynamic_pointer_cast<SchemeObject>(res);
+            return to_object(res);
         }
         },
         {"string-match-backward",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -257,7 +257,7 @@ static FunctionPackage package(
                   p1->value[p1->value.length() - 1 - pos] == p2->value[p2->value.length() - 1 - pos])
                 ++pos;
             auto res = std::make_shared<SchemeInt>(pos);
-            return std::dynamic_pointer_cast<SchemeObject>(res);
+            return to_object(res);
         }
         },
         {"reverse-substring!",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {

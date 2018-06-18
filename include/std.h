@@ -32,7 +32,7 @@ public:
     static T get(const std::string &);
 };
 
-using BuiltinFunction = std::function<std::shared_ptr<SchemeObject>(
+using BuiltinFunction = std::function<ExecutionResult(
     const std::list<std::shared_ptr<SchemeObject>> &)>;
 using FunctionRegistry = Registry<BuiltinFunction>;
 

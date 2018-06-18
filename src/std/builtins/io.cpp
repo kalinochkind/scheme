@@ -19,7 +19,7 @@ static FunctionPackage package(
             if(x.result == parse_result_t::ERROR)
                 throw eval_error("read: parse error: " + x.error);
             if(x.result == parse_result_t::END)
-                return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeSymbol>("eof"));
+                return to_object(std::make_shared<SchemeSymbol>("eof"));
             return do_quote(x.node, dummy, 0).first;
         }
         },
