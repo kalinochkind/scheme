@@ -13,7 +13,7 @@ static Package package(
         {"symbol?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
                 throw eval_error("symbol?: one argument required");
-            auto p = std::dynamic_pointer_cast<SchemeName>(l.front());
+            auto p = std::dynamic_pointer_cast<SchemeSymbol>(l.front());
             return p ? scheme_true : scheme_false;
         }
         },

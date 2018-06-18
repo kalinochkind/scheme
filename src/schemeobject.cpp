@@ -125,7 +125,7 @@ std::string SchemePair::externalRepr() const
 {
     if(!car)
         return "()";
-    auto pcar = std::dynamic_pointer_cast<SchemeName>(car);
+    auto pcar = std::dynamic_pointer_cast<SchemeSymbol>(car);
     if(pcar)
     {
         std::string prefix = "";
@@ -233,13 +233,19 @@ std::shared_ptr<ASTNode> SchemeVector::toAST() const
     return a;
 }
 
-std::string SchemeName::externalRepr() const
+long long SchemeSymbol::uninterned_counter = 0;
+
+std::string SchemeSymbol::externalRepr() const
 {
+    if(uninterned)
+        return "<uninterned-symbol " + value + ">";
     return value;
 }
 
-std::shared_ptr<ASTNode> SchemeName::toAST() const
+std::shared_ptr<ASTNode> SchemeSymbol::toAST() const
 {
+    if(uninterned)
+        return SchemeObject::toAST();
     return std::make_shared<ASTNode>(ast_type_t::NAME, value);
 }
 

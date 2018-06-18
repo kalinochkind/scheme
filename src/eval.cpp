@@ -5,7 +5,7 @@
 
 std::shared_ptr<SchemeObject> scheme_true = std::make_shared<SchemeBool>(true);
 std::shared_ptr<SchemeObject> scheme_false = std::make_shared<SchemeBool>(false);
-std::shared_ptr<SchemeObject> scheme_empty = std::make_shared<SchemeName>("");
+std::shared_ptr<SchemeObject> scheme_empty = std::make_shared<SchemeSymbol>("");
 std::shared_ptr<SchemeObject> scheme_nil = std::make_shared<SchemePair>(nullptr, nullptr);
 
 static bool pair_function(const std::string &s)
@@ -118,7 +118,7 @@ ExecutionResult ASTNode::evaluate(Context &context)
     if(type == ast_type_t::CHAR)
         return ExecutionResult(std::make_shared<SchemeChar>(char_name_to_char(value)));
     if(type == ast_type_t::BOOL)
-        return ExecutionResult(std::make_shared<SchemeBool>(value == "t"));
+        return ExecutionResult(value == "t" ? scheme_true : scheme_false);
     if(type == ast_type_t::NAME)
     {
         auto t = context.get(value);

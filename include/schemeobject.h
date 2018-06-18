@@ -230,11 +230,13 @@ struct SchemeVector: public SchemeObject
 
 };
 
-struct SchemeName: public SchemeObject
+struct SchemeSymbol: public SchemeObject
 {
     std::string value;
+    bool uninterned{false};
+    static long long uninterned_counter;
 
-    SchemeName(std::string s): value(s) {};
+    SchemeSymbol(std::string s): value(s) {};
 
     std::string externalRepr() const override;
     std::shared_ptr<ASTNode> toAST() const override;

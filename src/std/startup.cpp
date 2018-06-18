@@ -241,6 +241,10 @@ const std::string startup = "(define (> x y) (< y x)) "
         "(define sort! merge-sort!) "
         "(define (boolean/and . args) (if (fold-left (lambda (a b) (and a b)) #t args) #t #f)) "
         "(define (boolean/or . args) (if (fold-left (lambda (a b) (or a b)) #f args) #t #f)) "
+        "(define (intern s) (string->symbol (string-downcase s))) "
+        "(define intern-soft intern) "
+        "(define (symbol-append a b) (string->symbol (string-append (symbol->string a) (symbol->string b)))) "
+        "(define (symbol<? a b) (string<? (symbol->string a) (symbol->string b))) "
         ;
 
 

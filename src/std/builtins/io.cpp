@@ -21,7 +21,7 @@ static Package package(
             }
             catch(end_of_input)
             {
-                return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeName>("eof"));
+                return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeSymbol>("eof"));
             }
         }
         },

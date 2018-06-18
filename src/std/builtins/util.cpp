@@ -11,15 +11,9 @@ bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b)
     if(a == b)
         return true;
     {
-        auto p1 = std::dynamic_pointer_cast<SchemeName>(a);
-        auto p2 = std::dynamic_pointer_cast<SchemeName>(b);
-        if(p1 && p2)
-            return p1->value == p2->value;
-    }
-    {
-        auto p1 = std::dynamic_pointer_cast<SchemeBool>(a);
-        auto p2 = std::dynamic_pointer_cast<SchemeBool>(b);
-        if(p1 && p2)
+        auto p1 = std::dynamic_pointer_cast<SchemeSymbol>(a);
+        auto p2 = std::dynamic_pointer_cast<SchemeSymbol>(b);
+        if(p1 && p2 && !p1->uninterned && !p2->uninterned)
             return p1->value == p2->value;
     }
     {
