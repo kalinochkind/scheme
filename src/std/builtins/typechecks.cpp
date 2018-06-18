@@ -83,5 +83,12 @@ static FunctionPackage package(
             return p ? scheme_true : scheme_false;
         }
         },
+        {"promise?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("promise?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemePromise>(l.front());
+            return p ? scheme_true : scheme_false;
+        }
+        },
     }
 );

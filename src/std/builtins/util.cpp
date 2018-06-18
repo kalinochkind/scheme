@@ -94,15 +94,6 @@ static FunctionPackage package(
             return l.front();
         }
         },
-        {"force",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("force: one argument required");
-            auto t = std::dynamic_pointer_cast<SchemePromise>(l.front());
-            if(!t)
-                return l.front();
-            return std::dynamic_pointer_cast<SchemeObject>(t->force());
-        }
-        },
         {"eval",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             std::shared_ptr<SchemeEnvironment> e;
             if(l.size() != 2 || !(e = std::dynamic_pointer_cast<SchemeEnvironment>(l.back())))
