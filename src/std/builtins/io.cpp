@@ -15,14 +15,12 @@ static FunctionPackage package(
             if(l.size())
                 throw eval_error("read: no arguments required");
             Context dummy;
-            try
-            {
-                return do_quote(readObject(std::cin), dummy, 0).first;
-            }
-            catch(end_of_input)
-            {
+            auto x = readObject(std::cin);
+            if(x.result == parse_result_t::ERROR)
+                throw eval_error("read: parse error: " + x.error);
+            if(x.result == parse_result_t::END)
                 return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemeSymbol>("eof"));
-            }
+            return do_quote(x.node, dummy, 0).first;
         }
         },
     }

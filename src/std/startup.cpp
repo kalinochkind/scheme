@@ -254,18 +254,17 @@ Context initGlobalContext()
     global_context.newFrame();
     std::istringstream st;
     st.str(startup);
-    std::shared_ptr<ASTNode> x;
     while(1)
     {
-        try
-        {
-            x = readObject(st);
-            x->evaluate(global_context);
-        }
-        catch(end_of_input)
-        {
+        auto x = readObject(st);
+        if(x.result == parse_result_t::END)
             break;
+        if(x.result == parse_result_t::ERROR)
+        {
+            std::cout << "Error during initialization: " << x.error;
+            exit(1);
         }
+        x.node->evaluate(global_context);
     }
     global_context.newFrame();
     global_context.set("user-initial-environment", std::make_shared<SchemeEnvironment>(global_context));

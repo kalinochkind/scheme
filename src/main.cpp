@@ -10,26 +10,21 @@ std::chrono::milliseconds start_time;
 
 static int runREPL(Context &global_context)
 {
-    std::shared_ptr<ASTNode> x;
+    ParseResult x;
     while(true)
     {
-        try
-        {
-            std::cout << ">> ";
-            x = readObject(std::cin);
-        }
-        catch(end_of_input)
-        {
+        std::cout << ">> ";
+        x = readObject(std::cin);
+        if(x.result == parse_result_t::END)
             break;
-        }
-        catch(parse_error &e)
+        if(x.result == parse_result_t::ERROR)
         {
-            std::cerr << "Parse error: " << e.what() << std::endl;
+            std::cerr << "Parse error: " << x.error << std::endl;
             continue;
         }
         try
         {
-            std::cout << x->evaluate(global_context).force_value()->externalRepr() << '\n';
+            std::cout << x.node->evaluate(global_context).force_value()->externalRepr() << '\n';
         }
         catch(eval_error &e)
         {
@@ -41,25 +36,20 @@ static int runREPL(Context &global_context)
 
 static int runFile(Context &global_context, std::istream &file)
 {
-    std::shared_ptr<ASTNode> x;
+    ParseResult x;
     while(true)
     {
-        try
-        {
-            x = readObject(file);
-        }
-        catch(end_of_input)
-        {
+        x = readObject(file);
+        if(x.result == parse_result_t::END)
             return 0;
-        }
-        catch(parse_error &e)
+        if(x.result == parse_result_t::ERROR)
         {
-            std::cerr << "Parse error: " << e.what() << std::endl;
+            std::cerr << "Parse error: " << x.error << std::endl;
             return 1;
         }
         try
         {
-            x->evaluate(global_context).force_value();
+            x.node->evaluate(global_context).force_value();
         }
         catch(eval_error &e)
         {

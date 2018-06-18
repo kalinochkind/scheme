@@ -43,29 +43,39 @@ static int skip_whitespace(std::istream &is)
     }
 }
 
-void readQuoted(std::istream &is, std::shared_ptr<ASTNode> node, const std::string &form)
+ParseResult readQuoted(std::istream &is, std::shared_ptr<ASTNode> node, const std::string &form)
 {
     auto quote = std::make_shared<ASTNode>();
     quote->type = ast_type_t::NAME;
     quote->value = form;
     node->type = ast_type_t::LIST;
     node->list.push_back(quote);
-    node->list.push_back(readObject(is));
+    auto object = readObject(is);
+    if(object.result == parse_result_t::OK)
+    {
+        node->list.push_back(object.node);
+        return node;
+    }
+    return object;
 }
 
-void readList(std::istream &is, const std::shared_ptr<ASTNode> &node)
+ParseResult readList(std::istream &is, const std::shared_ptr<ASTNode> &node)
 {
     node->type = ast_type_t::LIST;
     skip_whitespace(is);
     int c = is.peek();
     while(c != EOF && c != ')')
     {
-        node->list.push_back(readObject(is));
+        auto object = readObject(is);
+        if(object.result != parse_result_t::OK)
+            return object;
+        node->list.push_back(object.node);
         c = skip_whitespace(is);
     }
     if(c == EOF)
-        throw parse_error("Unclosed list literal");
+        return ParseResult("Unclosed list literal");
     is.get();
+    return ParseResult(node);
 }
 
 static char parse_oct_char(const std::string &oct)
@@ -73,18 +83,19 @@ static char parse_oct_char(const std::string &oct)
     return ((oct[0] - '0') << 6) + ((oct[1] - '0') << 3) + (oct[2] - '0');
 }
 
-std::shared_ptr<ASTNode> readObject(std::istream &is)
+ParseResult readObject(std::istream &is)
 {
     auto o = std::make_shared<ASTNode>();
     skip_whitespace(is);
     int c = is.get();
     std::string charname;
+    ParseResult result;
     switch(c)
     {
         case EOF:
-            throw end_of_input("");
+            return ParseResult();
         case ')':
-            throw parse_error("Invalid syntax");
+            return ParseResult("Invalid syntax");
         case '"':
             o->type = ast_type_t::STRING;
             c = is.get();
@@ -102,12 +113,12 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
                     else if('0' <= c && c <= '7')
                     {
                         std::string oct;
-                        for(int i=0;i<2;++i)
+                        for(int i = 0; i < 2; ++i)
                         {
                             oct.push_back(c);
                             c = is.get();
                             if(!('0' <= c && c <= '7'))
-                                throw parse_error("Invalid escape sequence: \\" + oct + char(c));
+                                return ParseResult("Invalid escape sequence: \\" + oct + char(c));
                         }
                         oct.push_back(c);
                         o->value.push_back(parse_oct_char(oct));
@@ -120,26 +131,31 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
                 c = is.get();
             }
             if(c == EOF)
-                throw parse_error("Unclosed string literal");
+                return ParseResult("Unclosed string literal");
             return o;
         case '(':
-            readList(is, o);
+            if((result = readList(is, o)).result != parse_result_t::OK)
+                return result;
             return o;
         case '\'':
-            readQuoted(is, o, "quote");
+            if((result = readQuoted(is, o, "quote")).result != parse_result_t::OK)
+                return result;
             return o;
         case '`':
-            readQuoted(is, o, "quasiquote");
+            if((result = readQuoted(is, o, "quasiquote")).result != parse_result_t::OK)
+                return result;
             return o;
         case ',':
             if(is.peek() == '@')
             {
                 is.get();
-                readQuoted(is, o, "unquote-splicing");
+                if((result = readQuoted(is, o, "unquote-splicing")).result != parse_result_t::OK)
+                    return result;
             }
             else
             {
-                readQuoted(is, o, "unquote");
+                if((result = readQuoted(is, o, "unquote")).result != parse_result_t::OK)
+                    return result;
             }
             return o;
         case '#':
@@ -158,7 +174,7 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
                     o->type = ast_type_t::CHAR;
                     c = is.get();
                     if(c == EOF)
-                        throw parse_error("Invalid character");
+                        return ParseResult("Invalid character");
                     charname.clear();
                     charname.push_back(c);
                     c = is.peek();
@@ -170,14 +186,15 @@ std::shared_ptr<ASTNode> readObject(std::istream &is)
                     }
                     o->value = normalize_char_name(charname);
                     if(o->value.empty())
-                        throw parse_error("Invalid character: #\\" + charname);
+                        return ParseResult("Invalid character: #\\" + charname);
                     return o;
                 case '(':
-                    readList(is, o);
+                    if((result = readList(is, o)).result != parse_result_t::OK)
+                        return result;
                     o->type = ast_type_t::VECTOR;
                     return o;
                 default:
-                    throw parse_error(std::string("Invalid sequence: #") + char(c));
+                    return ParseResult(std::string("Invalid sequence: #") + char(c));
             }
         default:
             o->value.push_back(tolower(c));
