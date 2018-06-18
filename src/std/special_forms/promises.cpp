@@ -8,7 +8,7 @@ static std::shared_ptr<SchemeObject> make_promise(std::shared_ptr<ASTNode> body,
     return std::dynamic_pointer_cast<SchemeObject>(std::make_shared<SchemePromise>(f));
 }
 
-static Package package(
+static SpecialFormPackage package(
     {
         {"delay",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() != 1)

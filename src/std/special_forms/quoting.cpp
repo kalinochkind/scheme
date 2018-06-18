@@ -1,6 +1,6 @@
 #include "std.h"
 
-static Package package(
+static SpecialFormPackage package(
     {
         {"quote",      [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() != 1)

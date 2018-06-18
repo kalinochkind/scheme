@@ -1,6 +1,6 @@
 #include "std.h"
 
-static Package package(
+static SpecialFormPackage package(
     {
         {"do",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST || (*next(l.begin()))->type != ast_type_t::LIST)

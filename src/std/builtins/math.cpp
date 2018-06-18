@@ -88,7 +88,7 @@ static std::shared_ptr<SchemeObject> fold(const std::list<std::shared_ptr<Scheme
 }
 
 
-static Package package(
+static FunctionPackage package(
     {
         {"+",              [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return fold(l, 0, [](long long a, long long b) { return a + b; },

@@ -44,7 +44,7 @@ bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b)
 }
 
 
-static Package package(
+static FunctionPackage package(
     {
         {"runtime",  [](const std::list<std::shared_ptr<SchemeObject>> &) {
             return std::dynamic_pointer_cast<SchemeObject>(

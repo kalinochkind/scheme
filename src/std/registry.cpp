@@ -27,7 +27,7 @@ Registry<T> &Registry<T>::instance()
     return a;
 }
 
-Package::Package(const std::map<std::string, BuiltinFunction> &map)
+FunctionPackage::FunctionPackage(const std::map<std::string, BuiltinFunction> &map)
 {
     for(auto &&p : map)
     {
@@ -35,7 +35,7 @@ Package::Package(const std::map<std::string, BuiltinFunction> &map)
     }
 }
 
-Package::Package(const std::map<std::string, SpecialForm > &map)
+SpecialFormPackage::SpecialFormPackage(const std::map<std::string, SpecialForm > &map)
 {
     for(auto &&p : map)
     {
@@ -43,5 +43,9 @@ Package::Package(const std::map<std::string, SpecialForm > &map)
     }
 }
 
-template class Registry<SpecialForm>;
-template class Registry<BuiltinFunction>;
+
+template
+class Registry<SpecialForm>;
+
+template
+class Registry<BuiltinFunction>;

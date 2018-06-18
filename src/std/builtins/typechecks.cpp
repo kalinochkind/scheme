@@ -1,7 +1,7 @@
 #include <set>
 #include "std.h"
 
-static Package package(
+static FunctionPackage package(
     {
         {"pair?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
@@ -74,6 +74,13 @@ static Package package(
                 throw eval_error("list?: one argument required");
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
             return p && p->listLength() >= 0 ? scheme_true : scheme_false;
+        }
+        },
+        {"cell?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(l.size() != 1)
+                throw eval_error("cell?: one argument required");
+            auto p = std::dynamic_pointer_cast<SchemeCell>(l.front());
+            return p ? scheme_true : scheme_false;
         }
         },
     }

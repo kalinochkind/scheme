@@ -2,7 +2,7 @@
 #include "parser.h"
 #include "std.h"
 
-static Package package(
+static FunctionPackage package(
     {
         {"display", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)

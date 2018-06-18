@@ -36,7 +36,7 @@ make_function(const std::string &name, const std::list<std::shared_ptr<ASTNode>>
 }
 
 
-static Package package(
+static SpecialFormPackage package(
     {
         {"define",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() < 1)

@@ -41,11 +41,15 @@ using SpecialForm = std::function<ExecutionResult(const std::list<std::shared_pt
 using SpecialFormRegistry = Registry<SpecialForm>;
 
 
-struct Package
+struct FunctionPackage
 {
-    Package(const std::map<std::string, BuiltinFunction> &);
-
-    Package(const std::map<std::string, SpecialForm> &);
+    FunctionPackage(const std::map<std::string, BuiltinFunction> &);
 };
+
+struct SpecialFormPackage
+{
+    SpecialFormPackage(const std::map<std::string, SpecialForm> &);
+};
+
 
 #endif

@@ -1,7 +1,7 @@
 #include <algorithm>
 #include "std.h"
 
-static Package package(
+static FunctionPackage package(
     {
         {"make-vector",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() < 1 || l.size() > 2)

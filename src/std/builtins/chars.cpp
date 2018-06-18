@@ -13,7 +13,7 @@ static BuiltinFunction char_predicate(const std::string &name, int (*fun)(int))
     };
 }
 
-static Package package(
+static FunctionPackage package(
     {
         {"char->name",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() < 1 || l.size() > 2)

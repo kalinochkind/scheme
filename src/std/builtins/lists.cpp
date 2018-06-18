@@ -1,7 +1,7 @@
 #include <iostream>
 #include "std.h"
 
-static Package package(
+static FunctionPackage package(
     {
         {"length",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)

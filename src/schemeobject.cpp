@@ -194,6 +194,12 @@ long long SchemePair::listLength() const
     }
 }
 
+std::string SchemeCell::externalRepr() const
+{
+    return "<cell>";
+}
+
+
 std::shared_ptr<SchemeVector> SchemeVector::fromList(std::shared_ptr<SchemePair> list)
 {
     auto v = std::make_shared<SchemeVector>();

@@ -208,12 +208,22 @@ struct SchemePair: public SchemeObject
 {
     std::shared_ptr<SchemeObject> car, cdr;
 
-    SchemePair(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b): car(a), cdr(b) {};
+    SchemePair(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b): car(std::move(a)), cdr(std::move(b))
+    {};
 
     std::string externalRepr() const override;
     std::shared_ptr<ASTNode> toAST() const override;
 
     long long listLength() const;
+};
+
+struct SchemeCell: public SchemeObject
+{
+    std::shared_ptr<SchemeObject> value;
+
+    SchemeCell(std::shared_ptr<SchemeObject> a): value(std::move(a)) {};
+
+    std::string externalRepr() const override;
 };
 
 struct SchemeVector: public SchemeObject

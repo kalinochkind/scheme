@@ -1,6 +1,6 @@
 #include "std.h"
 
-static Package package(
+static FunctionPackage package(
     {
         {"symbol->string",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.size() != 1)
