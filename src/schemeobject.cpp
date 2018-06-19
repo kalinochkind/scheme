@@ -194,6 +194,11 @@ long long SchemePair::listLength() const
     }
 }
 
+std::string SchemeWeakPair::externalRepr() const
+{
+    return "<weak-pair>";
+}
+
 std::string SchemeCell::externalRepr() const
 {
     return "<cell>";

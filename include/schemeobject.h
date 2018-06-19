@@ -236,6 +236,18 @@ struct SchemePair : public SchemeObject
     long long listLength() const;
 };
 
+struct SchemeWeakPair : public SchemeObject
+{
+    std::weak_ptr<SchemeObject> car;
+    std::shared_ptr<SchemeObject> cdr;
+
+    SchemeWeakPair(const std::shared_ptr<SchemeObject> &a, std::shared_ptr<SchemeObject> b) : car(a), cdr(std::move(b))
+    {};
+
+    std::string externalRepr() const override;
+
+};
+
 struct SchemeCell : public SchemeObject
 {
     std::shared_ptr<SchemeObject> value;
