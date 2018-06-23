@@ -166,7 +166,7 @@ static SpecialFormPackage package(
             for(auto i : pl)
             {
                 auto value = i->list.size() == 2 ? i->list.back()->evaluate(local_context).force_value() : nullptr;
-                local_context.assign(i->list.front()->value, value);
+                local_context.set(i->list.front()->value, value);
             }
             ExecutionResult res;
             for(auto i = next(l.begin()); i != l.end(); ++i)
@@ -188,7 +188,9 @@ static SpecialFormPackage package(
                    i->list.front()->type != ast_type_t::NAME)
                     throw eval_error("fluid-let: list of (name value) required");
                 auto value = i->list.size() == 2 ? i->list.back()->evaluate(context).force_value() : nullptr;
-                auto old = context.get(i->list.front()->value);
+                std::shared_ptr<SchemeObject> old{nullptr};
+                if(!context.get(i->list.front()->value, old))
+                    throw eval_error("fluid-let: unbound variable");
                 old_vars[i->list.front()->value] = old;  // can be nullptr
                 context.assign(i->list.front()->value, value);
             }

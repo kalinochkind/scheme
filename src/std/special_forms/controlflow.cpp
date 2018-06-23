@@ -42,7 +42,10 @@ static SpecialFormPackage package(
                 for(auto &&i : vars)
                 {
                     if(i->list.size() < 3)
-                        new_frame[i->list.front()->value] = local_context.get(i->list.front()->value);
+                    {
+                        if(!local_context.get(i->list.front()->value, new_frame[i->list.front()->value]))
+                            throw eval_error("do: unbound variable");
+                    }
                     else
                         new_frame[i->list.front()->value] = i->list.back()->evaluate(local_context).force_value();
                 }

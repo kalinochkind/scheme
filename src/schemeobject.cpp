@@ -280,32 +280,35 @@ std::string SchemeEnvironment::externalRepr() const
     return "<environment>";
 }
 
-std::shared_ptr<SchemeObject> Context::get(const std::string &name) const
+bool Context::get(const std::string &name, std::shared_ptr<SchemeObject> &res) const
 {
     for(auto i = locals.rbegin(); i != locals.rend(); ++i)
     {
         if((*i)->count(name))
-            return (**i)[name];
+        {
+            res = (**i)[name];
+            return true;
+        }
     }
-    return nullptr;
+    return false;
 }
 
 void Context::set(const std::string &name, std::shared_ptr<SchemeObject> value)
 {
-    (*(locals.back()))[name] = value;
+    (*locals.back())[name] = value;
 }
 
-void Context::assign(const std::string &name, std::shared_ptr<SchemeObject> value)
+bool Context::assign(const std::string &name, std::shared_ptr<SchemeObject> value)
 {
     for(auto i = locals.rbegin(); i != locals.rend(); ++i)
     {
         if((*i)->count(name))
         {
             (**i)[name] = value;
-            return;
+            return true;
         }
     }
-    (*locals.front())[name] = value;
+    return false;
 }
 
 void Context::newFrame()

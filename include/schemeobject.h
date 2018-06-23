@@ -81,11 +81,11 @@ struct Context
     Context() : locals()
     {};
 
-    std::shared_ptr<SchemeObject> get(const std::string &name) const;
+    bool get(const std::string &name, std::shared_ptr<SchemeObject> &res) const;
 
     void set(const std::string &name, std::shared_ptr<SchemeObject> value);
 
-    void assign(const std::string &name, std::shared_ptr<SchemeObject> value);
+    bool assign(const std::string &name, std::shared_ptr<SchemeObject> value);
 
     void newFrame();
 

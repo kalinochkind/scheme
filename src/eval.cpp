@@ -121,9 +121,12 @@ ExecutionResult ASTNode::evaluate(Context &context)
         return ExecutionResult(value == "t" ? scheme_true : scheme_false);
     if(type == ast_type_t::NAME)
     {
-        auto t = context.get(value);
+        std::shared_ptr<SchemeObject> t{nullptr};
+        bool res = context.get(value, t);
         if(t)
             return ExecutionResult(t);
+        else if(res)
+            throw eval_error("Unassigned variable: " + value);
         else if(SpecialFormRegistry::exists(value) || FunctionRegistry::exists(value) || pair_function(value))
             return ExecutionResult(std::make_shared<SchemeBuiltinFunc>(value));
         else
