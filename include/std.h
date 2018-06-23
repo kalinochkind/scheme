@@ -30,6 +30,8 @@ public:
     static bool exists(const std::string &);
 
     static T get(const std::string &);
+
+    static const std::unordered_map<std::string, T> all();
 };
 
 using BuiltinFunction = std::function<ExecutionResult(

@@ -20,6 +20,14 @@ bool Registry<T>::exists(const std::string &name)
     return instance().map.count(name) != 0;
 }
 
+
+template<class T>
+const std::unordered_map<std::string, T> Registry<T>::all()
+{
+    return instance().map;
+}
+
+
 template<class T>
 Registry<T> &Registry<T>::instance()
 {

@@ -127,7 +127,7 @@ ExecutionResult ASTNode::evaluate(Context &context)
             return ExecutionResult(t);
         else if(res)
             throw eval_error("Unassigned variable: " + value);
-        else if(SpecialFormRegistry::exists(value) || FunctionRegistry::exists(value) || pair_function(value))
+        else if(pair_function(value))
             return ExecutionResult(std::make_shared<SchemeBuiltinFunc>(value));
         else
             throw eval_error("Undefined name: " + value);

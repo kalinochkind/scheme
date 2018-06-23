@@ -2,6 +2,7 @@
 #include <schemeobject.h>
 #include <sstream>
 #include <parser.h>
+#include <std.h>
 
 const std::string startup = "(define (> x y) (< y x)) "
         "(define (>= x y) (not (< x y))) "
@@ -263,6 +264,14 @@ Context initGlobalContext()
 {
     Context global_context;
     global_context.newFrame();
+    for(auto p : SpecialFormRegistry::all())
+    {
+        global_context.set(p.first, std::make_shared<SchemeBuiltinFunc>(p.first));
+    }
+    for(auto p : FunctionRegistry::all())
+    {
+        global_context.set(p.first, std::make_shared<SchemeBuiltinFunc>(p.first));
+    }
     std::istringstream st;
     st.str(startup);
     while(1)
