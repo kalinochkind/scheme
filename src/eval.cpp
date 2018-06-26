@@ -52,37 +52,37 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
             throw eval_error(bf->name + ": one argument required");
         return ExecutionResult(execute_pair_function(bf->name, val_list.front()));
     }
+    if((long long) val_list.size() < f->arity.first)
+        throw eval_error("Too few arguments");
+    if(f->arity.second >= 0 && (long long) val_list.size() > f->arity.second)
+        throw eval_error("Too many arguments");
+
     Context local_context = f->context;
     local_context.newFrame();
     auto pit = f->params.begin();
     auto lit = val_list.begin();
-    for(; lit != val_list.end() && pit != f->params.end(); ++lit, ++pit)
+
+    for(size_t i=0; i < std::min(val_list.size(), f->params.size() - (f->arity.second < 0)); ++lit, ++pit, ++i)
     {
-        if(f->arglist && next(pit) == f->params.end())
-        {
-            auto rem = scheme_nil;
-            for(auto rlit = val_list.rbegin(); rlit.base() != lit; ++rlit)
-                rem = std::make_shared<SchemePair>(*rlit, rem);
-            local_context.set(*pit, rem);
-            lit = val_list.end();
-            ++pit;
-            break;
-        }
         local_context.set(*pit, *lit);
     }
-    if(f->arglist && next(pit) == f->params.end())
+    if(lit == val_list.end())
     {
-        local_context.set(*pit, scheme_nil);
-        ++pit;
+        for(;pit!=f->params.end(); ++pit)
+        {
+            local_context.set(*pit, scheme_empty);
+        }
+        if(f->arity.second < 0)
+            local_context.set(f->params.back(), scheme_nil);
     }
-    if(lit != val_list.end())
+    else
     {
-        throw eval_error("Too many arguments");
+        auto rem = scheme_nil;
+        for(auto rlit = val_list.rbegin(); rlit.base() != lit; ++rlit)
+            rem = std::make_shared<SchemePair>(*rlit, rem);
+        local_context.set(f->params.back(), rem);
     }
-    if(pit != f->params.end())
-    {
-        throw eval_error("Too few arguments");
-    }
+
     ExecutionResult res;
     for(auto i = f->body.begin(); i != f->body.end(); ++i)
     {

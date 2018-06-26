@@ -257,6 +257,7 @@ const std::string startup = "(define (> x y) (< y x)) "
         "(define intern-soft intern) "
         "(define (symbol-append a b) (string->symbol (string-append (symbol->string a) (symbol->string b)))) "
         "(define (symbol<? a b) (string<? (symbol->string a) (symbol->string b))) "
+        "(define (default-object? o) (eq? o (string->symbol \"\"))) "
         ;
 
 

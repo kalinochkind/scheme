@@ -61,24 +61,15 @@ std::shared_ptr<ASTNode> SchemeFloat::toAST() const
 
 std::string SchemeFunc::externalRepr() const
 {
-    std::string res = "<function " + name + "(";
-    for(auto i = params.begin(); i != params.end(); ++i)
-    {
-        if(i != params.begin())
-            res += " ";
-        if(arglist && next(i) == params.end())
-            res += ". ";
-        res += *i;
-    }
-    return res + ")>";
+    return "<compound-procedure" + (name.empty() ? "" : (" " + name)) + ">";
 }
 
 std::string SchemeBuiltinFunc::externalRepr() const
 {
     if(SpecialFormRegistry::exists(name))
-        return "<special form '" + name + "'>";
+        return "<special form " + name + ">";
     else
-        return "<builtin function '" + name + "'>";
+        return "<primitive-procedure " + name + ">";
 }
 
 std::string SchemeBool::externalRepr() const

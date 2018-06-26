@@ -193,6 +193,10 @@ ParseResult readObject(std::istream &is)
                         return result;
                     o->type = ast_type_t::VECTOR;
                     return o;
+                case '!':
+                    o->value = "#!";
+                    c = is.get();
+                    break;
                 default:
                     return ParseResult(std::string("Invalid sequence: #") + char(c));
             }

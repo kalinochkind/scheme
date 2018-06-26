@@ -13,20 +13,47 @@ make_function(const std::string &name, const std::list<std::shared_ptr<ASTNode>>
     auto pl = l.front()->list;
     if(form == "define" || form == "named-lambda")
         pl.pop_front();
-    std::shared_ptr<SchemeFunc> f = std::make_shared<SchemeFunc>(name);
-    for(auto i = pl.begin(); i != pl.end(); ++i)
+    auto f = std::make_shared<SchemeFunc>(name);
+    int state = 0;
+    for(const auto &i : pl)
     {
-        if((*i)->type != ast_type_t::NAME)
+        if(i->type != ast_type_t::NAME)
             throw eval_error(form + ": list of names required");
-        if((*i)->value == ".")
+        if(i->value == "#!optional")
         {
-            if(next(i) == pl.end() || next(next(i)) != pl.end())
-                throw eval_error(form + ": incorrect dot syntax");
-            f->arglist = true;
-            continue;
+            if(state != 0)
+                throw eval_error(form + ": invalid declaration");
+            state = 1;
         }
-        f->params.push_back((*i)->value);
+        else if(i->value == "#!rest" || i->value == ".")
+        {
+            if(state > 1)
+                throw eval_error(form + ": invalid declaration");
+            state = 2;
+            f->arity.second = -1;
+        }
+        else
+        {
+            f->params.push_back(i->value);
+            if(state == 0)
+            {
+                ++f->arity.first;
+                ++f->arity.second;
+            }
+            else if(state == 1)
+            {
+                ++f->arity.second;
+            }
+            else if(state == 2)
+            {
+                state = 3;
+            }
+            else
+                throw eval_error(form + ": invalid declaration");
+        }
     }
+    if(state == 2)
+        throw eval_error(form + ": invalid declaration");
     for(auto i = next(l.begin()); i != l.end(); ++i)
     {
         f->body.push_back(**i);
@@ -113,6 +140,7 @@ static SpecialFormPackage package(
             {
                 f->body.push_back(**i);
             }
+            f->arity.first = f->arity.second = pl.size();
             for(auto i : pl)
             {
                 f->params.push_back(i->list.front()->value);
