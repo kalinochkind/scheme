@@ -46,11 +46,10 @@ bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b)
 
 static FunctionPackage package(
     {
-        {"runtime",  [](const std::list<std::shared_ptr<SchemeObject>> &) {
+        {"runtime", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &) {
             return to_object(std::make_shared<SchemeInt>((get_current_time() - start_time).count()));
-        }
-        },
-        {"error",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        }}},
+        {"error", {0, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             std::string res = "error: ";
             for(auto i : l)
             {
@@ -58,50 +57,34 @@ static FunctionPackage package(
             }
             throw eval_error(res);
             return scheme_empty;
-        }
-        },
-        {"cons",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("cons: 2 arguments required");
+        }}},
+        {"cons", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return to_object(std::make_shared<SchemePair>(l.front(), l.back()));
-        }
-        },
-        {"eq?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("eq?: 2 arguments required");
+        }}},
+        {"eq?", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return eq_test(l.front(), l.back()) ? scheme_true : scheme_false;
-        }
-        },
-        {"set-car!", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("set-car!: 2 arguments required");
+        }}},
+        {"set-car!", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
             if(!p || p == scheme_nil)
                 throw eval_error("set-car!: a pair required");
             p->car = l.back();
             return l.front();
-        }
-        },
-        {"set-cdr!", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("set-cdr!: 2 arguments required");
+        }}},
+        {"set-cdr!", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
             if(!p || p == scheme_nil)
                 throw eval_error("set-cdr!: a pair required");
             p->cdr = l.back();
             return l.front();
-        }
-        },
-        {"eval",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        }}},
+        {"eval", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             std::shared_ptr<SchemeEnvironment> e;
-            if(l.size() != 2 || !(e = std::dynamic_pointer_cast<SchemeEnvironment>(l.back())))
+            if(!(e = std::dynamic_pointer_cast<SchemeEnvironment>(l.back())))
                 throw eval_error("eval: code and environment required");
             return l.front()->toAST()->evaluate(e->context).force_value();  // tail call in eval?
-        }
-        },
-        {"apply",           [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() < 2)
-                throw eval_error("apply: function and list of arguments required");
+        }}},
+        {"apply", {2, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto f = std::dynamic_pointer_cast<SchemeFunc>(l.front());
             auto tail = std::dynamic_pointer_cast<SchemePair>(l.back());
             if(!f || !tail)
@@ -117,7 +100,6 @@ static FunctionPackage package(
             if(!tail)
                 throw eval_error("apply: invalid list");
             return ExecutionResult(f, args);
-        }
-        },
+        }}},
     }
 );

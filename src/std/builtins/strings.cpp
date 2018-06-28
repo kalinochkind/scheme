@@ -3,13 +3,13 @@
 
 static FunctionPackage package(
     {
-        {"make-string",            [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() < 1 || l.size() > 2)
-                throw eval_error("make-string: length required");
+        {"make-string", {1, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto lp = std::dynamic_pointer_cast<SchemeInt>(l.front());
             if(!lp)
                 throw eval_error("make-string: length required");
-            int len = lp->value;
+            long long len = lp->value;
+            if(len < 0)
+                throw eval_error("make-string: invalid length");
             char c = 0;
             if(l.size() == 2)
             {
@@ -21,9 +21,8 @@ static FunctionPackage package(
             auto str = std::make_shared<SchemeString>("");
             str->value.resize(len, c);
             return to_object(str);
-        }
-        },
-        {"string",                 [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        }}},
+        {"string", {0, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto str = std::make_shared<SchemeString>("");
             str->value.resize(l.size());
             int idx = 0;
@@ -35,11 +34,8 @@ static FunctionPackage package(
                 str->value[idx++] = cp->value;
             }
             return to_object(str);
-        }
-        },
-        {"string->list",           [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("string->list: a string required");
+        }}},
+        {"string->list", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             if(!sp)
                 throw eval_error("string->list: a string required");
@@ -49,21 +45,15 @@ static FunctionPackage package(
                 lst = std::make_shared<SchemePair>(std::make_shared<SchemeChar>(*it), lst);
             }
             return to_object(lst);
-        }
-        },
-        {"string-length",          [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("string-length: a string required");
+        }}},
+        {"string-length", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             if(!sp)
                 throw eval_error("string-length: a string required");
             auto len = std::make_shared<SchemeInt>(sp->value.length());
             return to_object(len);
-        }
-        },
-        {"string-ref",             [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("string-ref: string and index required");
+        }}},
+        {"string-ref", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto ip = std::dynamic_pointer_cast<SchemeInt>(l.back());
             if(!sp || !ip)
@@ -72,11 +62,8 @@ static FunctionPackage package(
                 throw eval_error("string-ref: out of range");
             auto ch = std::make_shared<SchemeChar>(sp->value[ip->value]);
             return to_object(ch);
-        }
-        },
-        {"string-set!",            [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 3)
-                throw eval_error("string-set!: string, index and char required");
+        }}},
+        {"string-set!", {3, 3, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto ip = std::dynamic_pointer_cast<SchemeInt>(*next(l.begin()));
             auto cp = std::dynamic_pointer_cast<SchemeChar>(l.back());
@@ -86,11 +73,8 @@ static FunctionPackage package(
                 throw eval_error("string-set!: out of range");
             sp->value[ip->value] = cp->value;
             return scheme_empty;
-        }
-        },
-        {"substring",              [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 3)
-                throw eval_error("substring: string and indices required");
+        }}},
+        {"substring", {3, 3, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto bp = std::dynamic_pointer_cast<SchemeInt>(*next(l.begin()));
             auto ep = std::dynamic_pointer_cast<SchemeInt>(l.back());
@@ -100,9 +84,8 @@ static FunctionPackage package(
                 throw eval_error("substring: invalid range");
             auto ns = std::make_shared<SchemeString>(sp->value.substr(bp->value, ep->value - bp->value));
             return to_object(ns);
-        }
-        },
-        {"string-append",          [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        }}},
+        {"string-append", {0, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             std::string res;
             for(const auto &i : l)
             {
@@ -113,11 +96,8 @@ static FunctionPackage package(
             }
             auto s = std::make_shared<SchemeString>(res);
             return to_object(s);
-        }
-        },
-        {"string-pad-left",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() < 2 || l.size() > 3)
-                throw eval_error("string-pad-left: string and length required");
+        }}},
+        {"string-pad-left", {2, 3, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto lp = std::dynamic_pointer_cast<SchemeInt>(*next(l.begin()));
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             if(!lp || !sp)
@@ -137,11 +117,8 @@ static FunctionPackage package(
                 res = sp->value.substr(sp->value.length() - lp->value);
             auto str = std::make_shared<SchemeString>(res);
             return to_object(str);
-        }
-        },
-        {"string-pad-right",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() < 2 || l.size() > 3)
-                throw eval_error("string-pad-right: string and length required");
+        }}},
+        {"string-pad-right", {2, 3, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto lp = std::dynamic_pointer_cast<SchemeInt>(*next(l.begin()));
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             if(!lp || !sp)
@@ -161,31 +138,22 @@ static FunctionPackage package(
                 res = sp->value.substr(0, lp->value);
             auto str = std::make_shared<SchemeString>(res);
             return to_object(str);
-        }
-        },
-        {"string=?",               [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("string=?: two strings required");
+        }}},
+        {"string=?", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
             if(!p1 || !p2)
                 throw eval_error("string=?: two strings required");
             return (p1->value == p2->value) ? scheme_true : scheme_false;
-        }
-        },
-        {"string<?",               [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("string<?: two strings required");
+        }}},
+        {"string<?", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
             if(!p1 || !p2)
                 throw eval_error("string<?: two strings required");
             return (p1->value < p2->value) ? scheme_true : scheme_false;
-        }
-        },
-        {"string-search-forward",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("string-search-forward: two strings required");
+        }}},
+        {"string-search-forward", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
             if(!p1 || !p2)
@@ -195,11 +163,8 @@ static FunctionPackage package(
                 return scheme_false;
             auto res = std::make_shared<SchemeInt>(pos);
             return to_object(res);
-        }
-        },
-        {"string-search-backward", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("string-search-backward: two strings required");
+        }}},
+        {"string-search-backward", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
             if(!p1 || !p2)
@@ -210,11 +175,8 @@ static FunctionPackage package(
             pos += p1->value.length();
             auto res = std::make_shared<SchemeInt>(pos);
             return to_object(res);
-        }
-        },
-        {"string-search-all",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("string-search-all: two strings required");
+        }}},
+        {"string-search-all", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
             if(!p1 || !p2)
@@ -229,11 +191,8 @@ static FunctionPackage package(
                 pos = p2->value.rfind(p1->value, pos - 1);
             }
             return to_object(res);
-        }
-        },
-        {"string-match-forward",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("string-match-forward: two strings required");
+        }}},
+        {"string-match-forward", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
             if(!p1 || !p2)
@@ -243,11 +202,8 @@ static FunctionPackage package(
                 ++pos;
             auto res = std::make_shared<SchemeInt>(pos);
             return to_object(res);
-        }
-        },
-        {"string-match-backward",  [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("string-match-backward: two strings required");
+        }}},
+        {"string-match-backward", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p1 = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto p2 = std::dynamic_pointer_cast<SchemeString>(l.back());
             if(!p1 || !p2)
@@ -258,11 +214,8 @@ static FunctionPackage package(
                 ++pos;
             auto res = std::make_shared<SchemeInt>(pos);
             return to_object(res);
-        }
-        },
-        {"reverse-substring!",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 3)
-                throw eval_error("reverse-substring!: string and indices required");
+        }}},
+        {"reverse-substring!", {3, 3, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto bp = std::dynamic_pointer_cast<SchemeInt>(*next(l.begin()));
             auto ep = std::dynamic_pointer_cast<SchemeInt>(l.back());
@@ -272,18 +225,14 @@ static FunctionPackage package(
                 throw eval_error("reverse-substring!: invalid range");
             std::reverse(sp->value.begin() + bp->value, sp->value.begin() + ep->value);
             return l.front();
-        }
-        },
-        {"set-string-length!",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("set-string-length!: string and length required");
+        }}},
+        {"set-string-length!", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             auto ip = std::dynamic_pointer_cast<SchemeInt>(l.back());
             if(!sp || !ip || ip->value < 0)
                 throw eval_error("set-string-length!: string and length required");
             sp->value.resize(ip->value);
             return scheme_empty;
-        }
-        },
+        }}},
     }
 );

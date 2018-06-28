@@ -4,16 +4,11 @@
 
 static FunctionPackage package(
     {
-        {"display", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("display: one argument required");
+        {"display", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             std::cout << l.front()->printable();
             return scheme_empty;
-        }
-        },
-        {"read",    [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size())
-                throw eval_error("read: no arguments required");
+        }}},
+        {"read", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             Context dummy;
             auto x = readObject(std::cin);
             if(x.result == parse_result_t::ERROR)
@@ -21,7 +16,6 @@ static FunctionPackage package(
             if(x.result == parse_result_t::END)
                 return to_object(std::make_shared<SchemeSymbol>("eof"));
             return do_quote(x.node, dummy, 0).first;
-        }
-        },
+        }}},
     }
 );

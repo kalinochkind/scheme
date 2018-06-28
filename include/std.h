@@ -34,8 +34,8 @@ public:
     static const std::unordered_map<std::string, T> all();
 };
 
-using BuiltinFunction = std::function<ExecutionResult(
-    const std::list<std::shared_ptr<SchemeObject>> &)>;
+using BuiltinFunction = std::tuple<long long, long long, std::function<ExecutionResult(
+    const std::list<std::shared_ptr<SchemeObject>> &)>>;
 using FunctionRegistry = Registry<BuiltinFunction>;
 
 using SpecialForm = std::function<ExecutionResult(const std::list<std::shared_ptr<ASTNode>> &,

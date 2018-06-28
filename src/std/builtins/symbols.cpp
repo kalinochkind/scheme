@@ -2,38 +2,27 @@
 
 static FunctionPackage package(
     {
-        {"symbol->string",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("symbol->string: a symbol required");
+        {"symbol->string", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeSymbol>(l.front());
             if(!sp)
                 throw eval_error("symbol->string: a symbol required");
             return to_object(std::make_shared<SchemeString>(sp->value));
-        }
-        },
-        {"string->symbol",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("string->symbol: a string required");
+        }}},
+        {"string->symbol", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             if(!sp)
                 throw eval_error("string->symbol: a string required");
             return to_object(std::make_shared<SchemeSymbol>(sp->value));
-        }
-        },
-        {"string->uninterned-symbol",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("string->uninterned-symbol: a string required");
+        }}},
+        {"string->uninterned-symbol", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto sp = std::dynamic_pointer_cast<SchemeString>(l.front());
             if(!sp)
                 throw eval_error("string->uninterned-symbol: a string required");
             auto res = std::make_shared<SchemeSymbol>(sp->value);
             res->uninterned = true;
             return to_object(res);
-        }
-        },
-        {"generate-uninterned-symbol",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() > 1)
-                throw eval_error("generate-uninterned-symbol: too many arguments");
+        }}},
+        {"generate-uninterned-symbol", {0, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             std::string prefix = "G";
             if(l.size())
             {
@@ -58,7 +47,6 @@ static FunctionPackage package(
             auto res = std::make_shared<SchemeSymbol>(prefix + std::to_string(SchemeSymbol::uninterned_counter++));
             res->uninterned = true;
             return to_object(res);
-        }
-        },
+        }}},
     }
 );

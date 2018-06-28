@@ -3,99 +3,60 @@
 
 static FunctionPackage package(
     {
-        {"pair?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("pair?: one argument required");
+        {"pair?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
             return (p && p != scheme_nil) ? scheme_true : scheme_false;
-        }
-        },
-        {"symbol?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("symbol?: one argument required");
+        }}},
+        {"symbol?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeSymbol>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
-        {"string?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("string?: one argument required");
+        }}},
+        {"string?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeString>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
-        {"char?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("char?: one argument required");
+        }}},
+        {"char?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeChar>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
-        {"number?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("number?: one argument required");
+        }}},
+        {"number?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p1 = std::dynamic_pointer_cast<SchemeInt>(l.front());
             if(p1)
                 return scheme_true;
             auto p2 = std::dynamic_pointer_cast<SchemeFloat>(l.front());
             return p2 ? scheme_true : scheme_false;
-        }
-        },
-        {"environment?", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("environment?: one argument required");
+        }}},
+        {"environment?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeEnvironment>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
-        {"boolean?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("boolean?: one argument required");
+        }}},
+        {"boolean?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeBool>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
-        {"vector?",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("vector?: one argument required");
+        }}},
+        {"vector?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeVector>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
-        {"procedure?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("procedure?: one argument required");
+        }}},
+        {"procedure?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeFunc>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
-        {"list?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("list?: one argument required");
+        }}},
+        {"list?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
             return p && p->listLength() >= 0 ? scheme_true : scheme_false;
-        }
-        },
-        {"cell?",        [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("cell?: one argument required");
+        }}},
+        {"cell?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeCell>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
-        {"promise?",     [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("promise?: one argument required");
+        }}},
+        {"promise?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemePromise>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
-        {"weak-pair?",   [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("weak-pair?: one argument required");
+        }}},
+        {"weak-pair?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeWeakPair>(l.front());
             return p ? scheme_true : scheme_false;
-        }
-        },
+        }}},
     }
 );

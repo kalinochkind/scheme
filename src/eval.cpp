@@ -42,20 +42,18 @@ ExecutionResult
 execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<SchemeObject>> &val_list)
 {
     std::shared_ptr<SchemeBuiltinFunc> bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
+    if((long long) val_list.size() < f->arity.first)
+        throw eval_error("Too few arguments");
+    if(f->arity.second >= 0 && (long long) val_list.size() > f->arity.second)
+        throw eval_error("Too many arguments");
     if(bf)
     {
         if(SpecialFormRegistry::exists(bf->name))
             throw eval_error(bf->name + " cannot be executed this way");
         if(FunctionRegistry::exists(bf->name))
-            return FunctionRegistry::get(bf->name)(val_list);
-        if(val_list.size() != 1)
-            throw eval_error(bf->name + ": one argument required");
+            return std::get<2>(FunctionRegistry::get(bf->name))(val_list);
         return ExecutionResult(execute_pair_function(bf->name, val_list.front()));
     }
-    if((long long) val_list.size() < f->arity.first)
-        throw eval_error("Too few arguments");
-    if(f->arity.second >= 0 && (long long) val_list.size() > f->arity.second)
-        throw eval_error("Too many arguments");
 
     Context local_context = f->context;
     local_context.newFrame();
@@ -128,7 +126,7 @@ ExecutionResult ASTNode::evaluate(Context &context)
         else if(res)
             throw eval_error("Unassigned variable: " + value);
         else if(pair_function(value))
-            return ExecutionResult(std::make_shared<SchemeBuiltinFunc>(value));
+            return ExecutionResult(std::make_shared<SchemeBuiltinFunc>(value, 1, 1));
         else
             throw eval_error("Undefined name: " + value);
     }

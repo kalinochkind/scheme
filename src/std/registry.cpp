@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "std.h"
 
 template<class T>
@@ -11,7 +12,7 @@ T Registry<T>::get(const std::string &name)
 {
     if(instance().map.count(name))
         return instance().map[name];
-    return nullptr;
+    assert(false);
 }
 
 template<class T>

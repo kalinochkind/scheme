@@ -162,7 +162,7 @@ struct SchemeFunc : public SchemeObject
     std::list<std::string> params;
     std::list<ASTNode> body;
     Context context;
-    std::pair<long long, long long>  arity;
+    std::pair<long long, long long> arity;
 
     SchemeFunc(std::string name = "") : name(name), params(), body(), context(), arity{0, 0}
     {};
@@ -173,6 +173,12 @@ struct SchemeFunc : public SchemeObject
 struct SchemeBuiltinFunc : public SchemeFunc
 {
     using SchemeFunc::SchemeFunc;
+
+    SchemeBuiltinFunc(const std::string &name, long long minargs, long long maxargs) : SchemeFunc(name)
+    {
+        arity.first = minargs;
+        arity.second = maxargs;
+    };
 
     std::string externalRepr() const override;
 };

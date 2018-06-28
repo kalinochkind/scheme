@@ -14,34 +14,34 @@ static bool is_float(std::shared_ptr<SchemeObject> p)
 
 static double get_value(std::shared_ptr<SchemeObject> p, const std::string &error_msg)
 {
-    if(is_int(p))
-        return std::dynamic_pointer_cast<SchemeInt>(p)->value;
-    if(is_float(p))
-        return std::dynamic_pointer_cast<SchemeFloat>(p)->value;
+    auto pi = std::dynamic_pointer_cast<SchemeInt>(p);
+    if(pi)
+        return pi->value;
+    auto pf = std::dynamic_pointer_cast<SchemeFloat>(p);
+    if(pf)
+        return pf->value;
     throw eval_error(error_msg);
 }
 
 static long long get_int(std::shared_ptr<SchemeObject> p, const std::string &error_msg)
 {
-    if(is_int(p))
-        return std::dynamic_pointer_cast<SchemeInt>(p)->value;
+    auto pi = std::dynamic_pointer_cast<SchemeInt>(p);
+    if(pi)
+        return pi->value;
     throw eval_error(error_msg);
 }
 
-std::function<std::shared_ptr<SchemeObject>(const std::list<std::shared_ptr<SchemeObject>> &)>
-math_function(const std::string &name, double (*fun)(double))
+BuiltinFunction math_function(const std::string &name, double (*fun)(double))
 {
-    return [name, fun](const std::list<std::shared_ptr<SchemeObject>> &l) {
-        if(l.size() != 1)
-            throw eval_error(name + ": number required");
+    return {1, 1, [name, fun](const std::list<std::shared_ptr<SchemeObject>> &l) {
         double arg = get_value(l.front(), name + ": number required");
         return to_object(std::make_shared<SchemeFloat>(fun(arg)));
-    };
+    }};
 }
 
 static ExecutionResult fold(const std::list<std::shared_ptr<SchemeObject>> &l, long long start,
-                                          long long (*llf)(long long, long long), double (*df)(double, double),
-                                          bool start_with_first = false)
+                            long long (*llf)(long long, long long), double (*df)(double, double),
+                            bool start_with_first = false)
 {
     long long n = start;
     double d = start;
@@ -90,24 +90,21 @@ static ExecutionResult fold(const std::list<std::shared_ptr<SchemeObject>> &l, l
 
 static FunctionPackage package(
     {
-        {"+",              [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"+", {0, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return fold(l, 0, [](long long a, long long b) { return a + b; },
                         [](double a, double b) { return a + b; });
-        }
-        },
-        {"-",              [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        }}},
+        {"-", {1, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.empty())
                 throw eval_error("-: at least one argument required");
             return fold(l, 0, [](long long a, long long b) { return a - b; },
                         [](double a, double b) { return a - b; }, l.size() > 1);
-        }
-        },
-        {"*",              [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        }}},
+        {"*", {0, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return fold(l, 1, [](long long a, long long b) { return a * b; },
                         [](double a, double b) { return a * b; });
-        }
-        },
-        {"/",              [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        }}},
+        {"/", {1, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(l.empty())
                 throw eval_error("/: at least one argument required");
             if(l.size() == 1)
@@ -126,11 +123,8 @@ static FunctionPackage package(
                 val /= d;
             }
             return to_object(std::make_shared<SchemeFloat>(val));
-        }
-        },
-        {"quotient",       [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("quotient: two ints required");
+        }}},
+        {"quotient", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto a = std::dynamic_pointer_cast<SchemeInt>(l.front());
             auto b = std::dynamic_pointer_cast<SchemeInt>(l.back());
             if(!a || !b)
@@ -138,11 +132,8 @@ static FunctionPackage package(
             if(b->value == 0)
                 throw eval_error("Division by zero");
             return to_object(std::make_shared<SchemeInt>(a->value / b->value));
-        }
-        },
-        {"remainder",      [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("remainder: two ints required");
+        }}},
+        {"remainder", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto a = std::dynamic_pointer_cast<SchemeInt>(l.front());
             auto b = std::dynamic_pointer_cast<SchemeInt>(l.back());
             if(!a || !b)
@@ -150,11 +141,8 @@ static FunctionPackage package(
             if(b->value == 0)
                 throw eval_error("Division by zero");
             return to_object(std::make_shared<SchemeInt>(a->value % b->value));
-        }
-        },
-        {"modulo",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("modulo: two ints required");
+        }}},
+        {"modulo", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto a = std::dynamic_pointer_cast<SchemeInt>(l.front());
             auto b = std::dynamic_pointer_cast<SchemeInt>(l.back());
             if(!a || !b)
@@ -167,11 +155,8 @@ static FunctionPackage package(
             else
                 res = a->value % b->value;
             return to_object(std::make_shared<SchemeInt>(res));
-        }
-        },
-        {"random",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("random: a number required");
+        }}},
+        {"random", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(is_int(l.front()))
             {
                 long long max = get_int(l.front(), "");
@@ -186,66 +171,52 @@ static FunctionPackage package(
             }
             else
                 throw eval_error("random: a number required");
-        }
-        },
-        {"<",              [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("<: two arguments required");
+        }}},
+        {"<", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(get_value(l.front(), "<: numbers required") <
                get_value((*next(l.begin())), "<: numbers required"))
                 return scheme_true;
             else
                 return scheme_false;
-        }
-        },
-        {"=",              [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 2)
-                throw eval_error("=: two arguments required");
+        }}},
+        {"=", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(get_value(l.front(), "=: numbers required") ==
                get_value((*next(l.begin())), "=: numbers required"))
                 return scheme_true;
             else
                 return scheme_false;
-        }
-        },
-        {"round",          math_function("round", round)},
-        {"ceiling",        math_function("ceiling", ceil)},
-        {"truncate",       math_function("truncate", trunc)},
-        {"floor",          math_function("floor", floor)},
-        {"sin",            math_function("sin", sin)},
-        {"cos",            math_function("cos", cos)},
-        {"exp",            math_function("exp", exp)},
-        {"log",            math_function("log", log)},
-        {"tan",            math_function("tan", tan)},
-        {"asin",           math_function("asin", asin)},
-        {"acos",           math_function("acos", acos)},
-        {"sqrt",           math_function("sqrt", sqrt)},
-        {"atan",           [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() < 1 || l.size() > 2)
-                throw eval_error("atan: one or two numbers required");
+        }}},
+        {"round", math_function("round", round)},
+        {"ceiling", math_function("ceiling", ceil)},
+        {"truncate", math_function("truncate", trunc)},
+        {"floor", math_function("floor", floor)},
+        {"sin", math_function("sin", sin)},
+        {"cos", math_function("cos", cos)},
+        {"exp", math_function("exp", exp)},
+        {"log", math_function("log", log)},
+        {"tan", math_function("tan", tan)},
+        {"asin", math_function("asin", asin)},
+        {"acos", math_function("acos", acos)},
+        {"sqrt", math_function("sqrt", sqrt)},
+        {"atan", {1, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             double res, arg = get_value(l.front(), "atan: number required");
             if(l.size() == 1)
                 res = atan(arg);
             else
                 res = atan2(arg, get_value(l.back(), "atan: number required"));
             return to_object(std::make_shared<SchemeFloat>(res));
-        }
-        },
-        {"exact?",         [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1)
-                throw eval_error("exact?: one argument required");
+        }}},
+        {"exact?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return is_int(l.front()) ? scheme_true : scheme_false;
-        }
-        },
-        {"number->string", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(l.size() != 1 || !(is_int(l.front()) || is_float(l.front())))
+        }}},
+        {"number->string", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(!(is_int(l.front()) || is_float(l.front())))
                 throw eval_error("number->string: a number required");
             return to_object(std::make_shared<SchemeString>(l.front()->externalRepr()));
-        }
-        },
-        {"string->number", [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        }}},
+        {"string->number", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             std::shared_ptr<SchemeString> s;
-            if(l.size() != 1 || !(s = std::dynamic_pointer_cast<SchemeString>(l.front())))
+            if(!(s = std::dynamic_pointer_cast<SchemeString>(l.front())))
                 throw eval_error("string->number: a string required");
             ast_type_t type = identifier_type(s->value);
             try
@@ -261,7 +232,6 @@ static FunctionPackage package(
             {
                 return scheme_false;
             }
-        }
-        },
+        }}},
     }
 );

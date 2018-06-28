@@ -267,11 +267,12 @@ Context initGlobalContext()
     global_context.newFrame();
     for(auto p : SpecialFormRegistry::all())
     {
-        global_context.set(p.first, std::make_shared<SchemeBuiltinFunc>(p.first));
+        global_context.set(p.first, std::make_shared<SchemeBuiltinFunc>(p.first, 0, -1));
     }
     for(auto p : FunctionRegistry::all())
     {
-        global_context.set(p.first, std::make_shared<SchemeBuiltinFunc>(p.first));
+        global_context.set(p.first, std::make_shared<SchemeBuiltinFunc>(p.first,
+                                                                        std::get<0>(p.second), std::get<1>(p.second)));
     }
     std::istringstream st;
     st.str(startup);
