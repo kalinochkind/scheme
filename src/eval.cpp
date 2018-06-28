@@ -1,6 +1,6 @@
 #include "std.h"
 #include <iostream>
-#include <regex>
+#include <assert.h>
 #include "char.h"
 
 std::shared_ptr<SchemeObject> scheme_true = std::make_shared<SchemeBool>(true);
@@ -8,26 +8,6 @@ std::shared_ptr<SchemeObject> scheme_false = std::make_shared<SchemeBool>(false)
 std::shared_ptr<SchemeObject> scheme_empty = std::make_shared<SchemeSymbol>("");
 std::shared_ptr<SchemeObject> scheme_nil = std::make_shared<SchemePair>(nullptr, nullptr);
 
-static bool is_pair_function(const std::string &s)
-{
-    static const std::regex re("^c[ad]+r$");
-    return std::regex_match(s, re);
-}
-
-static std::shared_ptr<SchemeObject> execute_pair_function(const std::string &name, std::shared_ptr<SchemeObject> p)
-{
-    for(size_t i = name.length() - 2; i; --i)
-    {
-        auto pp = std::dynamic_pointer_cast<SchemePair>(p);
-        if(!pp || pp == scheme_nil)
-            throw eval_error(name + ": not a pair");
-        if(name[i] == 'a')
-            p = pp->car;
-        else
-            p = pp->cdr;
-    }
-    return p;
-}
 
 std::shared_ptr<SchemeObject> ExecutionResult::force_value()
 {
@@ -52,7 +32,7 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
             throw eval_error(bf->name + " cannot be executed this way");
         if(FunctionRegistry::exists(bf->name))
             return std::get<2>(FunctionRegistry::get(bf->name))(val_list);
-        return ExecutionResult(execute_pair_function(bf->name, val_list.front()));
+        assert(false);
     }
 
     Context local_context = f->context;
@@ -125,8 +105,6 @@ ExecutionResult ASTNode::evaluate(Context &context)
             return ExecutionResult(t);
         else if(res)
             throw eval_error("Unassigned variable: " + value);
-        else if(is_pair_function(value))
-            return ExecutionResult(std::make_shared<SchemeBuiltinFunc>(value, 1, 1));
         else
             throw eval_error("Undefined name: " + value);
     }
