@@ -6,44 +6,6 @@ std::chrono::milliseconds get_current_time()
         std::chrono::system_clock::now().time_since_epoch());
 }
 
-bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b)
-{
-    if(a == b)
-        return true;
-    {
-        auto p1 = std::dynamic_pointer_cast<SchemeSymbol>(a);
-        auto p2 = std::dynamic_pointer_cast<SchemeSymbol>(b);
-        if(p1 && p2 && !p1->uninterned && !p2->uninterned)
-            return p1->value == p2->value;
-    }
-    {
-        auto p1 = std::dynamic_pointer_cast<SchemeBuiltinFunc>(a);
-        auto p2 = std::dynamic_pointer_cast<SchemeBuiltinFunc>(b);
-        if(p1 && p2)
-            return p1->name == p2->name;
-    }
-    {
-        auto p1 = std::dynamic_pointer_cast<SchemeInt>(a);
-        auto p2 = std::dynamic_pointer_cast<SchemeInt>(b);
-        if(p1 && p2)
-            return p1->value == p2->value;
-    }
-    {
-        auto p1 = std::dynamic_pointer_cast<SchemeFloat>(a);
-        auto p2 = std::dynamic_pointer_cast<SchemeFloat>(b);
-        if(p1 && p2)
-            return p1->value == p2->value;
-    }
-    {
-        auto p1 = std::dynamic_pointer_cast<SchemeChar>(a);
-        auto p2 = std::dynamic_pointer_cast<SchemeChar>(b);
-        if(p1 && p2)
-            return p1->value == p2->value;
-    }
-    return false;
-}
-
-
 static FunctionPackage package(
     {
         {"runtime", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &) {
@@ -68,7 +30,7 @@ static FunctionPackage package(
             return l.front()->to_AST()->evaluate(e->context).force_value();  // tail call in eval?
         }}},
         {"apply", {2, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            auto f = std::dynamic_pointer_cast<SchemeFunc>(l.front());
+            auto f = std::dynamic_pointer_cast<SchemeProcedure>(l.front());
             auto tail = std::dynamic_pointer_cast<SchemePair>(l.back());
             if(!f || !tail)
                 throw eval_error("apply: function and list of arguments required");

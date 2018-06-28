@@ -8,8 +8,10 @@
 
 extern std::shared_ptr<SchemeObject> scheme_true, scheme_false, scheme_empty, scheme_nil;
 
-
-bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b);
+inline bool eq_test(const std::shared_ptr<SchemeObject> &a, const std::shared_ptr<SchemeObject> &b)
+{
+    return a == b || a->is_eq(b);
+}
 
 std::chrono::milliseconds get_current_time();
 

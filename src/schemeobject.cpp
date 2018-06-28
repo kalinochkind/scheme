@@ -39,6 +39,11 @@ std::shared_ptr<ASTNode> SchemeObject::to_AST() const
     throw eval_error("Cannot evaluate " + external_repr());
 }
 
+bool SchemeObject::is_eq(const std::shared_ptr<SchemeObject> &) const
+{
+    return false;
+}
+
 std::string SchemeInt::external_repr() const
 {
     return std::to_string(value);
@@ -47,6 +52,12 @@ std::string SchemeInt::external_repr() const
 std::shared_ptr<ASTNode> SchemeInt::to_AST() const
 {
     return std::make_shared<ASTNode>(ast_type_t::INT, external_repr());
+}
+
+bool SchemeInt::is_eq(const std::shared_ptr<SchemeObject> &a) const
+{
+    auto p = std::dynamic_pointer_cast<SchemeInt>(a);
+    return p && value == p->value;
 }
 
 std::string SchemeFloat::external_repr() const
@@ -59,17 +70,25 @@ std::shared_ptr<ASTNode> SchemeFloat::to_AST() const
     return std::make_shared<ASTNode>(ast_type_t::FLOAT, external_repr());
 }
 
-std::string SchemeFunc::external_repr() const
+bool SchemeFloat::is_eq(const std::shared_ptr<SchemeObject> &a) const
+{
+    auto p = std::dynamic_pointer_cast<SchemeFloat>(a);
+    return p && value == p->value;
+}
+
+std::string SchemeCompoundProcedure::external_repr() const
 {
     return "<compound-procedure" + (name.empty() ? "" : (" " + name)) + ">";
 }
 
-std::string SchemeBuiltinFunc::external_repr() const
+std::string SchemePrimitiveProcedure::external_repr() const
 {
-    if(SpecialFormRegistry::exists(name))
-        return "<special form " + name + ">";
-    else
-        return "<primitive-procedure " + name + ">";
+    return "<primitive-procedure " + name + ">";
+}
+
+std::string SchemeSpecialForm::external_repr() const
+{
+    return "<special form " + name + ">";
 }
 
 std::string SchemeBool::external_repr() const
@@ -110,6 +129,12 @@ std::shared_ptr<ASTNode> SchemeChar::to_AST() const
 std::string SchemeChar::printable() const
 {
     return std::string(1, value);
+}
+
+bool SchemeChar::is_eq(const std::shared_ptr<SchemeObject> &a) const
+{
+    auto p = std::dynamic_pointer_cast<SchemeChar>(a);
+    return p && value == p->value;
 }
 
 std::string SchemePair::external_repr() const
@@ -251,6 +276,12 @@ std::shared_ptr<ASTNode> SchemeSymbol::to_AST() const
     return std::make_shared<ASTNode>(ast_type_t::NAME, value);
 }
 
+bool SchemeSymbol::is_eq(const std::shared_ptr<SchemeObject> &a) const
+{
+    auto p = std::dynamic_pointer_cast<SchemeSymbol>(a);
+    return p && value == p->value && !uninterned && !p->uninterned;
+}
+
 std::string SchemePromise::external_repr() const
 {
     return "<promise>";
@@ -260,7 +291,7 @@ std::shared_ptr<SchemeObject> SchemePromise::force()
 {
     if(!value)
     {
-        value = execute_function(func, {}).force_value();
+        value = func->execute({}).force_value();
         func.reset();
     }
     return value;

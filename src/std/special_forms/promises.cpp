@@ -2,7 +2,7 @@
 
 static std::shared_ptr<SchemeObject> make_promise(std::shared_ptr<ASTNode> body, Context &context)
 {
-    auto f = std::make_shared<SchemeFunc>();
+    auto f = std::make_shared<SchemeCompoundProcedure>();
     f->context = context;
     f->body = {*body};
     return std::make_shared<SchemePromise>(f);

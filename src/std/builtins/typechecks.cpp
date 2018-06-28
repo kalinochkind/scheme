@@ -39,7 +39,7 @@ static FunctionPackage package(
             return p ? scheme_true : scheme_false;
         }}},
         {"procedure?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            auto p = std::dynamic_pointer_cast<SchemeFunc>(l.front());
+            auto p = std::dynamic_pointer_cast<SchemeProcedure>(l.front());
             return p ? scheme_true : scheme_false;
         }}},
         {"list?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {

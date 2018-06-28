@@ -10,7 +10,9 @@
 
 
 struct SchemeObject;
-struct SchemeFunc;
+struct SchemeProcedure;
+
+using Arity = std::pair<long long, long long>;
 
 class eval_error : public std::runtime_error
 {
@@ -22,10 +24,10 @@ extern std::chrono::milliseconds start_time;
 
 struct TailContext
 {
-    std::shared_ptr<SchemeFunc> func;
+    std::shared_ptr<SchemeProcedure> func;
     std::list<std::shared_ptr<SchemeObject>> args;
 
-    TailContext(const std::shared_ptr<SchemeFunc> func, const std::list<std::shared_ptr<SchemeObject>> args) :
+    TailContext(const std::shared_ptr<SchemeProcedure> &func, const std::list<std::shared_ptr<SchemeObject>> &args) :
         func(func), args(args)
     {}
 };
@@ -50,7 +52,7 @@ struct ExecutionResult
                                                                   tail_context(nullptr)
     {};
 
-    ExecutionResult(const std::shared_ptr<SchemeFunc> &func,
+    ExecutionResult(const std::shared_ptr<SchemeProcedure> &func,
                     const std::list<std::shared_ptr<SchemeObject>> &args) :
         type(execution_result_t::TAIL_CALL), value(nullptr), tail_context(std::make_unique<TailContext>(func, args))
     {};
@@ -62,9 +64,6 @@ struct ExecutionResult
                                                           tail_context(nullptr)
      {};*/
 };
-
-ExecutionResult
-execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<SchemeObject>> &val_list);
 
 
 using context_map_t = std::map<std::string, std::shared_ptr<SchemeObject>>;
@@ -106,7 +105,7 @@ struct ASTNode
     ASTNode(ast_type_t type, const std::string &value) : type(type), value(value), list()
     {};
 
-    ExecutionResult evaluate(Context &context);
+    ExecutionResult evaluate(Context &context) const;
 
 };
 
@@ -130,6 +129,8 @@ struct SchemeObject
 
     virtual std::shared_ptr<ASTNode> to_AST() const;
 
+    virtual bool is_eq(const std::shared_ptr<SchemeObject> &) const;
+
 };
 
 struct SchemeInt : public SchemeObject
@@ -142,6 +143,8 @@ struct SchemeInt : public SchemeObject
     std::string external_repr() const override;
 
     std::shared_ptr<ASTNode> to_AST() const override;
+
+    bool is_eq(const std::shared_ptr<SchemeObject> &) const override;
 };
 
 struct SchemeFloat : public SchemeObject
@@ -154,34 +157,63 @@ struct SchemeFloat : public SchemeObject
     std::string external_repr() const override;
 
     std::shared_ptr<ASTNode> to_AST() const override;
+
+    bool is_eq(const std::shared_ptr<SchemeObject> &) const override;
 };
 
-struct SchemeFunc : public SchemeObject
+struct SchemeSpecialForm: public SchemeObject
 {
     std::string name;
+
+    explicit SchemeSpecialForm(const std::string &name): name(name)
+    {}
+
+    std::string external_repr() const override;
+
+    ExecutionResult execute(std::list<std::shared_ptr<ASTNode>>, Context &);
+};
+
+struct SchemeProcedure: public SchemeObject
+{
+    std::string name{""};
+    Arity arity{0, 0};
+
+    ExecutionResult execute(const std::list<std::shared_ptr<SchemeObject>> &) const;
+
+    virtual ExecutionResult _run(const std::list<std::shared_ptr<SchemeObject>> &) const = 0;
+};
+
+
+struct SchemeCompoundProcedure: public SchemeProcedure
+{
     std::list<std::string> params;
     std::list<ASTNode> body;
     Context context;
-    std::pair<long long, long long> arity;
 
-    SchemeFunc(std::string name = "") : name(name), params(), body(), context(), arity{0, 0}
-    {};
+    explicit SchemeCompoundProcedure(const std::string &name_ = "")
+    {
+        name = name_;
+    }
 
     std::string external_repr() const override;
+
+    ExecutionResult _run(const std::list<std::shared_ptr<SchemeObject>> &) const override;
 };
 
-struct SchemeBuiltinFunc : public SchemeFunc
+struct SchemePrimitiveProcedure: public SchemeProcedure
 {
-    using SchemeFunc::SchemeFunc;
-
-    SchemeBuiltinFunc(const std::string &name, long long minargs, long long maxargs) : SchemeFunc(name)
+    SchemePrimitiveProcedure(const std::string &name_, long long minargs, long long maxargs)
     {
+        name = name_;
         arity.first = minargs;
         arity.second = maxargs;
-    };
+    }
 
     std::string external_repr() const override;
+
+    ExecutionResult _run(const std::list<std::shared_ptr<SchemeObject>> &) const override;
 };
+
 
 struct SchemeBool : public SchemeObject
 {
@@ -226,6 +258,8 @@ struct SchemeChar : public SchemeObject
     std::shared_ptr<ASTNode> to_AST() const override;
 
     std::string printable() const override;
+
+    bool is_eq(const std::shared_ptr<SchemeObject> &) const override;
 };
 
 struct SchemePair : public SchemeObject
@@ -293,14 +327,16 @@ struct SchemeSymbol : public SchemeObject
     std::string external_repr() const override;
 
     std::shared_ptr<ASTNode> to_AST() const override;
+
+    bool is_eq(const std::shared_ptr<SchemeObject> &) const override;
 };
 
 struct SchemePromise : public SchemeObject
 {
     std::shared_ptr<SchemeObject> value;
-    std::shared_ptr<SchemeFunc> func;
+    std::shared_ptr<SchemeCompoundProcedure> func;
 
-    SchemePromise(std::shared_ptr<SchemeFunc> f) : value(nullptr), func(f)
+    SchemePromise(std::shared_ptr<SchemeCompoundProcedure> f) : value(nullptr), func(f)
     {};
 
     std::string external_repr() const override;

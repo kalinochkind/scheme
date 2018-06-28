@@ -13,56 +13,56 @@ std::shared_ptr<SchemeObject> ExecutionResult::force_value()
 {
     while(type == execution_result_t::TAIL_CALL)
     {
-        (*this) = execute_function(tail_context->func, tail_context->args);
+        (*this) = tail_context->func->execute(tail_context->args);
     }
     return value;
 }
 
-ExecutionResult
-execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<SchemeObject>> &val_list)
+ExecutionResult SchemeProcedure::execute(const std::list<std::shared_ptr<SchemeObject>> &val_list) const
 {
-    std::shared_ptr<SchemeBuiltinFunc> bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
-    if((long long) val_list.size() < f->arity.first)
+    if((long long) val_list.size() < arity.first)
         throw eval_error("Too few arguments");
-    if(f->arity.second >= 0 && (long long) val_list.size() > f->arity.second)
+    if(arity.second >= 0 && (long long) val_list.size() > arity.second)
         throw eval_error("Too many arguments");
-    if(bf)
-    {
-        if(SpecialFormRegistry::exists(bf->name))
-            throw eval_error(bf->name + " cannot be executed this way");
-        if(FunctionRegistry::exists(bf->name))
-            return std::get<2>(FunctionRegistry::get(bf->name))(val_list);
-        assert(false);
-    }
+    return _run(val_list);
+}
 
-    Context local_context = f->context;
+
+ExecutionResult SchemePrimitiveProcedure::_run(const std::list<std::shared_ptr<SchemeObject>> &val_list) const
+{
+    return std::get<2>(FunctionRegistry::get(name))(val_list);
+}
+
+ExecutionResult SchemeCompoundProcedure::_run(const std::list<std::shared_ptr<SchemeObject>> &val_list) const
+{
+    Context local_context = context;
     local_context.new_frame();
-    auto pit = f->params.begin();
+    auto pit = params.begin();
     auto lit = val_list.begin();
 
-    for(size_t i=0; i < std::min(val_list.size(), f->params.size() - (f->arity.second < 0)); ++lit, ++pit, ++i)
+    for(size_t i=0; i < std::min(val_list.size(), params.size() - (arity.second < 0)); ++lit, ++pit, ++i)
     {
         local_context.set(*pit, *lit);
     }
     if(lit == val_list.end())
     {
-        for(;pit!=f->params.end(); ++pit)
+        for(;pit!=params.end(); ++pit)
         {
             local_context.set(*pit, scheme_empty);
         }
-        if(f->arity.second < 0)
-            local_context.set(f->params.back(), scheme_nil);
+        if(arity.second < 0)
+            local_context.set(params.back(), scheme_nil);
     }
     else
     {
         auto rem = scheme_nil;
         for(auto rlit = val_list.rbegin(); rlit.base() != lit; ++rlit)
             rem = std::make_shared<SchemePair>(*rlit, rem);
-        local_context.set(f->params.back(), rem);
+        local_context.set(params.back(), rem);
     }
 
     ExecutionResult res;
-    for(auto i = f->body.begin(); i != f->body.end(); ++i)
+    for(auto i = body.begin(); i != body.end(); ++i)
     {
         res.force_value();
         res = i->evaluate(local_context);
@@ -70,7 +70,14 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
     return res;
 }
 
-ExecutionResult ASTNode::evaluate(Context &context)
+ExecutionResult SchemeSpecialForm::execute(std::list<std::shared_ptr<ASTNode>> l, Context &context)
+{
+    l.pop_front();
+    return SpecialFormRegistry::get(name)(l, context);
+}
+
+
+ExecutionResult ASTNode::evaluate(Context &context) const
 {
 
     if(type == ast_type_t::INT)
@@ -113,17 +120,16 @@ ExecutionResult ASTNode::evaluate(Context &context)
     if(list.empty())
         throw eval_error("Trying to evaluate empty list");
 
-    auto f = std::dynamic_pointer_cast<SchemeFunc>(list.front()->evaluate(context).force_value());
+    auto func = list.front()->evaluate(context).force_value();
+    auto sf = std::dynamic_pointer_cast<SchemeSpecialForm>(func);
+    if(sf)
+    {
+        return sf->execute(list, context);
+    }
+    auto f = std::dynamic_pointer_cast<SchemeProcedure>(func);
     if(!f)
     {
         throw eval_error("Trying to call not a function");
-    }
-    auto bf = std::dynamic_pointer_cast<SchemeBuiltinFunc>(f);
-    if(bf && SpecialFormRegistry::exists(bf->name))
-    {
-        auto nl = list;
-        nl.pop_front();
-        return SpecialFormRegistry::get(bf->name)(nl, context);
     }
     std::list<std::shared_ptr<SchemeObject>> val_list;
     for(auto lit = std::next(list.begin()); lit != list.end(); ++lit)

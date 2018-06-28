@@ -13,7 +13,7 @@ make_function(const std::string &name, const std::list<std::shared_ptr<ASTNode>>
     auto pl = l.front()->list;
     if(form == "define" || form == "named-lambda")
         pl.pop_front();
-    auto f = std::make_shared<SchemeFunc>(name);
+    auto f = std::make_shared<SchemeCompoundProcedure>(name);
     int state = 0;
     for(const auto &i : pl)
     {
@@ -134,7 +134,7 @@ static SpecialFormPackage package(
                 }
                 return res;
             }
-            auto f = std::make_shared<SchemeFunc>();
+            auto f = std::make_shared<SchemeCompoundProcedure>();
             f->context = local_context;
             for(auto i = next(next(l.begin())); i != l.end(); ++i)
             {
