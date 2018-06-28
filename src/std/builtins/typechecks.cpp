@@ -42,6 +42,14 @@ static FunctionPackage package(
             auto p = std::dynamic_pointer_cast<SchemeProcedure>(l.front());
             return p ? scheme_true : scheme_false;
         }}},
+        {"compound-procedure?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto p = std::dynamic_pointer_cast<SchemeCompoundProcedure>(l.front());
+            return p ? scheme_true : scheme_false;
+        }}},
+        {"primitive-procedure?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto p = std::dynamic_pointer_cast<SchemePrimitiveProcedure>(l.front());
+            return p ? scheme_true : scheme_false;
+        }}},
         {"list?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
             return p && p->list_length() >= 0 ? scheme_true : scheme_false;

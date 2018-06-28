@@ -258,7 +258,15 @@ const std::string startup =
     "(define intern-soft intern) "
     "(define (symbol-append a b) (string->symbol (string-append (symbol->string a) (symbol->string b)))) "
     "(define (symbol<? a b) (string<? (symbol->string a) (symbol->string b))) "
-    "(define (default-object? o) (eq? o (string->symbol \"\"))) ";
+    "(define (default-object? o) (eq? o (string->symbol \"\"))) "
+    "(define (make-procedure-arity min #!optional max s) (if (default-object? max) (set! max #f)) "
+    "  (if (eq? max min) (if (eq? s #t) min (cons min min)) (cons min max))) "
+    "(define (procedure-arity? x) (cond ((exact? x) (>= x 0)) ((pair? x) "
+    "  (or (and (exact? (car x)) (exact? (cdr x)) (<= (car x) (cdr x)) (>= (car x) 0)) "
+    "  (and (exact? (car x)) (>= (car x) 0) (eq? (cdr x) #f)))) (else #f))) "
+    "(define (procedure-arity-min a) (if (exact? a) a (car a))) "
+    "(define (procedure-arity-max a) (if (exact? a) a (cdr a)))"
+    "";
 
 
 Context init_global_context()

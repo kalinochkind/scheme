@@ -88,6 +88,16 @@ static SpecialFormPackage package(
         }
         },
         {"lambda",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+            if(l.size() > 0 && l.front()->type == ast_type_t::NAME)
+            {
+                auto ll = l;
+                ll.pop_front();
+                auto node = std::make_shared<ASTNode>();
+                node->list.push_back(std::make_shared<ASTNode>(ast_type_t::NAME, "."));
+                node->list.push_back(l.front());
+                ll.push_front(node);
+                return ExecutionResult(make_function("", ll, context, "lambda"));
+            }
             return ExecutionResult(make_function("", l, context, "lambda"));
         }
         },
