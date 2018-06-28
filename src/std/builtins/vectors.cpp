@@ -21,14 +21,14 @@ static FunctionPackage package(
             auto lp = std::dynamic_pointer_cast<SchemePair>(l.front());
             if(!lp)
                 throw eval_error("list->vector: list required");
-            auto vec = SchemeVector::fromList(lp);
+            auto vec = SchemeVector::from_list(lp);
             return to_object(vec);
         }}},
         {"vector->list", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto lp = std::dynamic_pointer_cast<SchemeVector>(l.front());
             if(!lp)
                 throw eval_error("vector->list: vector required");
-            auto lst = lp->toList();
+            auto lst = lp->to_list();
             return to_object(lst);
         }}},
         {"vector-grow", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -86,7 +86,7 @@ static FunctionPackage package(
                 throw eval_error("quick-sort!: vector and comparator required");
             std::sort(vp->vec.begin(), vp->vec.end(),
                       [cp](const std::shared_ptr<SchemeObject> &a, const std::shared_ptr<SchemeObject> &b) {
-                          return execute_function(cp, {a, b}).force_value()->toBool();
+                          return execute_function(cp, {a, b}).force_value()->to_bool();
                       });
             return l.front();
         }}},
@@ -97,7 +97,7 @@ static FunctionPackage package(
                 throw eval_error("merge-sort!: vector and comparator required");
             std::stable_sort(vp->vec.begin(), vp->vec.end(),
                              [cp](const std::shared_ptr<SchemeObject> &a, const std::shared_ptr<SchemeObject> &b) {
-                                 return execute_function(cp, {a, b}).force_value()->toBool();
+                                 return execute_function(cp, {a, b}).force_value()->to_bool();
                              });
             return l.front();
         }}},

@@ -8,13 +8,13 @@
 std::chrono::milliseconds start_time;
 
 
-static int runREPL(Context &global_context)
+static int run_REPL(Context &global_context)
 {
     ParseResult x;
     while(true)
     {
         std::cout << ">> ";
-        x = readObject(std::cin);
+        x = read_object(std::cin);
         if(x.result == parse_result_t::END)
             break;
         if(x.result == parse_result_t::ERROR)
@@ -24,7 +24,7 @@ static int runREPL(Context &global_context)
         }
         try
         {
-            std::cout << x.node->evaluate(global_context).force_value()->externalRepr() << '\n';
+            std::cout << x.node->evaluate(global_context).force_value()->external_repr() << '\n';
         }
         catch(eval_error &e)
         {
@@ -34,12 +34,12 @@ static int runREPL(Context &global_context)
     return 0;
 }
 
-static int runFile(Context &global_context, std::istream &file)
+static int run_file(Context &global_context, std::istream &file)
 {
     ParseResult x;
     while(true)
     {
-        x = readObject(file);
+        x = read_object(file);
         if(x.result == parse_result_t::END)
             return 0;
         if(x.result == parse_result_t::ERROR)
@@ -63,10 +63,10 @@ int main(int argc, char **argv)
 {
     start_time = get_current_time();
     srand(time(0));
-    Context global_context = initGlobalContext();
+    Context global_context = init_global_context();
     if (argc <= 1)
     {
-        return runREPL(global_context);
+        return run_REPL(global_context);
     }
     else
     {
@@ -76,6 +76,6 @@ int main(int argc, char **argv)
             std::cerr << "Error: no such file\n";
             return 1;
         }
-        return runFile(global_context, infile);
+        return run_file(global_context, infile);
     }
 }

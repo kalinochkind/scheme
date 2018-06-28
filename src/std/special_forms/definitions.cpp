@@ -115,7 +115,7 @@ static SpecialFormPackage package(
             else
                 throw eval_error("let: invalid argument");
             Context local_context = context;
-            local_context.newFrame();
+            local_context.new_frame();
             for(auto i : pl)
             {
                 if(i->type != ast_type_t::LIST || !(i->list.size() == 2 || i->list.size() == 1) ||
@@ -166,7 +166,7 @@ static SpecialFormPackage package(
                    i->list.front()->type != ast_type_t::NAME)
                     throw eval_error("let*: list of (name value) required");
                 auto value = i->list.size() == 2 ? i->list.back()->evaluate(local_context).force_value() : nullptr;
-                local_context.newFrame();
+                local_context.new_frame();
                 local_context.set(i->list.front()->value, value);
             }
             ExecutionResult res;
@@ -183,7 +183,7 @@ static SpecialFormPackage package(
                 throw eval_error("letrec: parameters and code required");
             auto pl = l.front()->list;
             Context local_context = context;
-            local_context.newFrame();
+            local_context.new_frame();
             for(auto i : pl)
             {
                 if(i->type != ast_type_t::LIST || !(i->list.size() == 2 || i->list.size() == 1) ||

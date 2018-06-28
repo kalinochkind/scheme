@@ -34,37 +34,37 @@ static std::string quote_string(const std::string &s)
     return ans + "\"";
 }
 
-std::shared_ptr<ASTNode> SchemeObject::toAST() const
+std::shared_ptr<ASTNode> SchemeObject::to_AST() const
 {
-    throw eval_error("Cannot evaluate " + externalRepr());
+    throw eval_error("Cannot evaluate " + external_repr());
 }
 
-std::string SchemeInt::externalRepr() const
-{
-    return std::to_string(value);
-}
-
-std::shared_ptr<ASTNode> SchemeInt::toAST() const
-{
-    return std::make_shared<ASTNode>(ast_type_t::INT, externalRepr());
-}
-
-std::string SchemeFloat::externalRepr() const
+std::string SchemeInt::external_repr() const
 {
     return std::to_string(value);
 }
 
-std::shared_ptr<ASTNode> SchemeFloat::toAST() const
+std::shared_ptr<ASTNode> SchemeInt::to_AST() const
 {
-    return std::make_shared<ASTNode>(ast_type_t::FLOAT, externalRepr());
+    return std::make_shared<ASTNode>(ast_type_t::INT, external_repr());
 }
 
-std::string SchemeFunc::externalRepr() const
+std::string SchemeFloat::external_repr() const
+{
+    return std::to_string(value);
+}
+
+std::shared_ptr<ASTNode> SchemeFloat::to_AST() const
+{
+    return std::make_shared<ASTNode>(ast_type_t::FLOAT, external_repr());
+}
+
+std::string SchemeFunc::external_repr() const
 {
     return "<compound-procedure" + (name.empty() ? "" : (" " + name)) + ">";
 }
 
-std::string SchemeBuiltinFunc::externalRepr() const
+std::string SchemeBuiltinFunc::external_repr() const
 {
     if(SpecialFormRegistry::exists(name))
         return "<special form " + name + ">";
@@ -72,22 +72,22 @@ std::string SchemeBuiltinFunc::externalRepr() const
         return "<primitive-procedure " + name + ">";
 }
 
-std::string SchemeBool::externalRepr() const
+std::string SchemeBool::external_repr() const
 {
     return value ? "#t" : "#f";
 }
 
-std::shared_ptr<ASTNode> SchemeBool::toAST() const
+std::shared_ptr<ASTNode> SchemeBool::to_AST() const
 {
     return std::make_shared<ASTNode>(ast_type_t::BOOL, value ? "t" : "f");
 }
 
-std::string SchemeString::externalRepr() const
+std::string SchemeString::external_repr() const
 {
     return quote_string(value);
 }
 
-std::shared_ptr<ASTNode> SchemeString::toAST() const
+std::shared_ptr<ASTNode> SchemeString::to_AST() const
 {
     return std::make_shared<ASTNode>(ast_type_t::STRING, value);
 }
@@ -97,12 +97,12 @@ std::string SchemeString::printable() const
     return value;
 }
 
-std::string SchemeChar::externalRepr() const
+std::string SchemeChar::external_repr() const
 {
     return std::string("#\\") + char_to_char_name(value);
 }
 
-std::shared_ptr<ASTNode> SchemeChar::toAST() const
+std::shared_ptr<ASTNode> SchemeChar::to_AST() const
 {
     return std::make_shared<ASTNode>(ast_type_t::CHAR, normalize_char_name(char_to_char_name(value)));
 }
@@ -112,7 +112,7 @@ std::string SchemeChar::printable() const
     return std::string(1, value);
 }
 
-std::string SchemePair::externalRepr() const
+std::string SchemePair::external_repr() const
 {
     if(!car)
         return "()";
@@ -132,10 +132,10 @@ std::string SchemePair::externalRepr() const
         {
             auto pcdr = std::dynamic_pointer_cast<SchemePair>(cdr);
             if(pcdr->cdr == scheme_nil)
-                return prefix + pcdr->car->externalRepr();
+                return prefix + pcdr->car->external_repr();
         }
     }
-    std::string res = "(" + car->externalRepr();
+    std::string res = "(" + car->external_repr();
     std::shared_ptr<SchemeObject> p = cdr;
     std::shared_ptr<SchemePair> pp;
     std::set<const SchemePair *> visited{this};
@@ -143,32 +143,32 @@ std::string SchemePair::externalRepr() const
     {
         if(p == scheme_nil)
             return res + ")";
-        res += " " + pp->car->externalRepr();
+        res += " " + pp->car->external_repr();
         if(visited.count(pp.get()))
             return res + " ...)";
         p = pp->cdr;
         visited.insert(pp.get());
     }
-    return res + " . " + p->externalRepr() + ")";
+    return res + " . " + p->external_repr() + ")";
 }
 
-std::shared_ptr<ASTNode> SchemePair::toAST() const
+std::shared_ptr<ASTNode> SchemePair::to_AST() const
 {
     auto a = std::make_shared<ASTNode>();
     const SchemePair *p(this);
     while(p && p != scheme_nil.get())
     {
-        a->list.push_back(p->car->toAST());
+        a->list.push_back(p->car->to_AST());
         p = dynamic_cast<const SchemePair*>(p->cdr.get());
     }
     if(!p)
     {
-        return SchemeObject::toAST();
+        return SchemeObject::to_AST();
     }
     return a;
 }
 
-long long SchemePair::listLength() const
+long long SchemePair::list_length() const
 {
     const SchemePair *p = this;
     std::set<const SchemePair*> visited{p};
@@ -185,18 +185,18 @@ long long SchemePair::listLength() const
     }
 }
 
-std::string SchemeWeakPair::externalRepr() const
+std::string SchemeWeakPair::external_repr() const
 {
     return "<weak-pair>";
 }
 
-std::string SchemeCell::externalRepr() const
+std::string SchemeCell::external_repr() const
 {
     return "<cell>";
 }
 
 
-std::shared_ptr<SchemeVector> SchemeVector::fromList(std::shared_ptr<SchemePair> list)
+std::shared_ptr<SchemeVector> SchemeVector::from_list(std::shared_ptr<SchemePair> list)
 {
     auto v = std::make_shared<SchemeVector>();
     std::set<const SchemePair *> visited{list.get()};
@@ -213,7 +213,7 @@ std::shared_ptr<SchemeVector> SchemeVector::fromList(std::shared_ptr<SchemePair>
     return v;
 }
 
-std::shared_ptr<SchemePair> SchemeVector::toList() const
+std::shared_ptr<SchemePair> SchemeVector::to_list() const
 {
     auto l = std::dynamic_pointer_cast<SchemePair>(scheme_nil);
     for(auto it=vec.rbegin(); it != vec.rend(); ++it)
@@ -223,35 +223,35 @@ std::shared_ptr<SchemePair> SchemeVector::toList() const
     return l;
 }
 
-std::string SchemeVector::externalRepr() const
+std::string SchemeVector::external_repr() const
 {
-    return "#" + toList()->externalRepr();
+    return "#" + to_list()->external_repr();
 }
 
-std::shared_ptr<ASTNode> SchemeVector::toAST() const
+std::shared_ptr<ASTNode> SchemeVector::to_AST() const
 {
-    auto a = toList()->toAST();
+    auto a = to_list()->to_AST();
     a->type = ast_type_t::VECTOR;
     return a;
 }
 
 long long SchemeSymbol::uninterned_counter = 0;
 
-std::string SchemeSymbol::externalRepr() const
+std::string SchemeSymbol::external_repr() const
 {
     if(uninterned)
         return "<uninterned-symbol " + value + ">";
     return value;
 }
 
-std::shared_ptr<ASTNode> SchemeSymbol::toAST() const
+std::shared_ptr<ASTNode> SchemeSymbol::to_AST() const
 {
     if(uninterned)
-        return SchemeObject::toAST();
+        return SchemeObject::to_AST();
     return std::make_shared<ASTNode>(ast_type_t::NAME, value);
 }
 
-std::string SchemePromise::externalRepr() const
+std::string SchemePromise::external_repr() const
 {
     return "<promise>";
 }
@@ -266,7 +266,7 @@ std::shared_ptr<SchemeObject> SchemePromise::force()
     return value;
 }
 
-std::string SchemeEnvironment::externalRepr() const
+std::string SchemeEnvironment::external_repr() const
 {
     return "<environment>";
 }
@@ -302,17 +302,17 @@ bool Context::assign(const std::string &name, std::shared_ptr<SchemeObject> valu
     return false;
 }
 
-void Context::newFrame()
+void Context::new_frame()
 {
     locals.push_back(std::make_shared<context_map_t>());
 }
 
-void Context::newFrame(const context_map_t &vars)
+void Context::new_frame(const context_map_t &vars)
 {
     locals.push_back(std::make_shared<context_map_t>(vars));
 }
 
-void Context::delFrame()
+void Context::delete_frame()
 {
     locals.pop_back();
 }

@@ -8,9 +8,9 @@ static FunctionPackage package(
             std::cout << l.front()->printable();
             return scheme_empty;
         }}},
-        {"read", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"read", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &) {
             Context dummy;
-            auto x = readObject(std::cin);
+            auto x = read_object(std::cin);
             if(x.result == parse_result_t::ERROR)
                 throw eval_error("read: parse error: " + x.error);
             if(x.result == parse_result_t::END)

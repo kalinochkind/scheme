@@ -53,7 +53,7 @@ static FunctionPackage package(
             std::string res = "error: ";
             for(auto i : l)
             {
-                res += i->externalRepr() + " ";
+                res += i->external_repr() + " ";
             }
             throw eval_error(res);
             return scheme_empty;
@@ -82,7 +82,7 @@ static FunctionPackage package(
             std::shared_ptr<SchemeEnvironment> e;
             if(!(e = std::dynamic_pointer_cast<SchemeEnvironment>(l.back())))
                 throw eval_error("eval: code and environment required");
-            return l.front()->toAST()->evaluate(e->context).force_value();  // tail call in eval?
+            return l.front()->to_AST()->evaluate(e->context).force_value();  // tail call in eval?
         }}},
         {"apply", {2, -1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto f = std::dynamic_pointer_cast<SchemeFunc>(l.front());

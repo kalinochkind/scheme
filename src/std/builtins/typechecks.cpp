@@ -44,7 +44,7 @@ static FunctionPackage package(
         }}},
         {"list?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
-            return p && p->listLength() >= 0 ? scheme_true : scheme_false;
+            return p && p->list_length() >= 0 ? scheme_true : scheme_false;
         }}},
         {"cell?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemeCell>(l.front());

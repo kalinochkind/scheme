@@ -21,11 +21,11 @@ static SpecialFormPackage package(
                     context).force_value();
             }
             Context local_context = context;
-            local_context.newFrame(new_frame);
+            local_context.new_frame(new_frame);
             while(true)
             {
                 auto cond_value = cond->list.front()->evaluate(local_context);
-                if(cond_value.force_value()->toBool())
+                if(cond_value.force_value()->to_bool())
                 {
                     for(auto it = next(cond->list.begin()); it != cond->list.end(); ++it)
                     {
@@ -49,8 +49,8 @@ static SpecialFormPackage package(
                     else
                         new_frame[i->list.front()->value] = i->list.back()->evaluate(local_context).force_value();
                 }
-                local_context.delFrame();
-                local_context.newFrame(new_frame);
+                local_context.delete_frame();
+                local_context.new_frame(new_frame);
             }
         }
         },
@@ -61,7 +61,7 @@ static SpecialFormPackage package(
                     throw eval_error("cond: non-empty lists required");
                 ExecutionResult br;
                 if((branch->list.front()->type == ast_type_t::NAME && branch->list.front()->value == "else") ||
-                   (br = branch->list.front()->evaluate(context)).force_value()->toBool())
+                    (br = branch->list.front()->evaluate(context)).force_value()->to_bool())
                 {
                     if(branch->list.size() == 1)
                     {
@@ -93,7 +93,7 @@ static SpecialFormPackage package(
         {"if",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
             if(l.size() > 3 || l.size() < 2)
                 throw eval_error("if: 2 or 3 arguments required");
-            if(l.front()->evaluate(context).force_value()->toBool())
+            if(l.front()->evaluate(context).force_value()->to_bool())
                 return (*next(l.begin()))->evaluate(context);
             else if(l.size() == 3)
                 return (*next(next(l.begin())))->evaluate(context);
@@ -148,7 +148,7 @@ static SpecialFormPackage package(
             for(auto i = l.begin(); next(i) != l.end(); ++i)
             {
                 auto res = (*i)->evaluate(context).force_value();
-                if(!res->toBool())
+                if(!res->to_bool())
                     return ExecutionResult(res);
             }
             return l.back()->evaluate(context);
@@ -160,7 +160,7 @@ static SpecialFormPackage package(
             for(auto i = l.begin(); next(i) != l.end(); ++i)
             {
                 auto res = (*i)->evaluate(context).force_value();
-                if(res->toBool())
+                if(res->to_bool())
                     return ExecutionResult(res);
             }
             return l.back()->evaluate(context);

@@ -13,7 +13,7 @@ bool eq_test(std::shared_ptr<SchemeObject> a, std::shared_ptr<SchemeObject> b);
 
 std::chrono::milliseconds get_current_time();
 
-Context initGlobalContext();
+Context init_global_context();
 
 
 template<class T>

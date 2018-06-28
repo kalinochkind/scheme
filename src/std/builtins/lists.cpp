@@ -6,7 +6,7 @@ static FunctionPackage package(
         {"length", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemePair>(l.front());
             long long len;
-            if(!p || (len = p->listLength()) < 0)
+            if(!p || (len = p->list_length()) < 0)
                 throw eval_error("length: a list required");
             return to_object(std::make_shared<SchemeInt>(len));
         }}},

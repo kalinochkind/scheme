@@ -1,7 +1,7 @@
 #include "std.h"
 
 
-void prepend_value(std::shared_ptr<SchemePair> &lst, const std::shared_ptr<SchemeObject> &obj, bool &dotted)
+static void prepend_value(std::shared_ptr<SchemePair> &lst, const std::shared_ptr<SchemeObject> &obj, bool &dotted)
 {
     if(dotted)
         lst->car = obj;
@@ -86,6 +86,6 @@ do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
         }
     }
     if(node->type == ast_type_t::VECTOR)
-        return {to_object(SchemeVector::fromList(lst)), false};
+        return {to_object(SchemeVector::from_list(lst)), false};
     return {to_object(lst), false};
 }

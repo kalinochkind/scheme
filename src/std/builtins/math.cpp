@@ -50,7 +50,7 @@ static ExecutionResult fold(const std::list<std::shared_ptr<SchemeObject>> &l, l
     {
         if(!is_int(i) && !is_float(i))
         {
-            throw eval_error(i->externalRepr() + " is not an number");
+            throw eval_error(i->external_repr() + " is not an number");
         }
         if(start_with_first)
         {
@@ -212,7 +212,7 @@ static FunctionPackage package(
         {"number->string", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             if(!(is_int(l.front()) || is_float(l.front())))
                 throw eval_error("number->string: a number required");
-            return to_object(std::make_shared<SchemeString>(l.front()->externalRepr()));
+            return to_object(std::make_shared<SchemeString>(l.front()->external_repr()));
         }}},
         {"string->number", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             std::shared_ptr<SchemeString> s;

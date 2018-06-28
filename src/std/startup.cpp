@@ -261,10 +261,10 @@ const std::string startup = "(define (> x y) (< y x)) "
         ;
 
 
-Context initGlobalContext()
+Context init_global_context()
 {
     Context global_context;
-    global_context.newFrame();
+        global_context.new_frame();
     for(auto p : SpecialFormRegistry::all())
     {
         global_context.set(p.first, std::make_shared<SchemeBuiltinFunc>(p.first, 0, -1));
@@ -278,7 +278,7 @@ Context initGlobalContext()
     st.str(startup);
     while(1)
     {
-        auto x = readObject(st);
+        auto x = read_object(st);
         if(x.result == parse_result_t::END)
             break;
         if(x.result == parse_result_t::ERROR)
@@ -288,7 +288,7 @@ Context initGlobalContext()
         }
         x.node->evaluate(global_context);
     }
-    global_context.newFrame();
+        global_context.new_frame();
     global_context.set("user-initial-environment", std::make_shared<SchemeEnvironment>(global_context));
     return global_context;
 }

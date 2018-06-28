@@ -22,7 +22,7 @@ struct ParseResult
     ParseResult(): result(parse_result_t::END), node(nullptr), error{} {}
 };
 
-ParseResult readObject(std::istream &is);
+ParseResult read_object(std::istream &is);
 ast_type_t identifier_type(const std::string &s);
 
 #endif //SCHEME_PARSER_H

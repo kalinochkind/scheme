@@ -8,7 +8,7 @@ std::shared_ptr<SchemeObject> scheme_false = std::make_shared<SchemeBool>(false)
 std::shared_ptr<SchemeObject> scheme_empty = std::make_shared<SchemeSymbol>("");
 std::shared_ptr<SchemeObject> scheme_nil = std::make_shared<SchemePair>(nullptr, nullptr);
 
-static bool pair_function(const std::string &s)
+static bool is_pair_function(const std::string &s)
 {
     static const std::regex re("^c[ad]+r$");
     return std::regex_match(s, re);
@@ -56,7 +56,7 @@ execute_function(std::shared_ptr<SchemeFunc> f, const std::list<std::shared_ptr<
     }
 
     Context local_context = f->context;
-    local_context.newFrame();
+    local_context.new_frame();
     auto pit = f->params.begin();
     auto lit = val_list.begin();
 
@@ -125,7 +125,7 @@ ExecutionResult ASTNode::evaluate(Context &context)
             return ExecutionResult(t);
         else if(res)
             throw eval_error("Unassigned variable: " + value);
-        else if(pair_function(value))
+        else if(is_pair_function(value))
             return ExecutionResult(std::make_shared<SchemeBuiltinFunc>(value, 1, 1));
         else
             throw eval_error("Undefined name: " + value);
