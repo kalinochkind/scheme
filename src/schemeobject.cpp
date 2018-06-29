@@ -86,6 +86,12 @@ std::string SchemePrimitiveProcedure::external_repr() const
     return "<primitive-procedure " + name + ">";
 }
 
+bool SchemePrimitiveProcedure::is_eq(const std::shared_ptr<SchemeObject> &a) const
+{
+    auto p = std::dynamic_pointer_cast<SchemePrimitiveProcedure>(a);
+    return p && name == p->name;
+}
+
 std::string SchemeSpecialForm::external_repr() const
 {
     return "<special form " + name + ">";

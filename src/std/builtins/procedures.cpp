@@ -39,5 +39,26 @@ static FunctionPackage package(
             return to_object(std::make_shared<SchemePair>(low, f->arity.second >= 0 ? std::make_shared<SchemeInt>(
                 f->arity.second) : scheme_false));
         }}},
+        {"make-primitive-procedure", {1, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto s = std::dynamic_pointer_cast<SchemeSymbol>(l.front());
+            if(!s)
+                throw eval_error("make-primitive-procedure: a symbol required");
+            if(FunctionRegistry::exists(s->value))
+            {
+                long long arity_min = std::get<0>(FunctionRegistry::get(s->value));
+                long long arity_max = std::get<1>(FunctionRegistry::get(s->value));
+                return to_object(std::make_shared<SchemePrimitiveProcedure>(s->value, arity_min, arity_max));
+            }
+            if(l.size() == 2 && l.back()->to_bool())
+                return scheme_false;
+            else
+                throw eval_error("make-primitive-procedure: no such procedure");
+        }}},
+        {"primitive-procedure-name", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto s = std::dynamic_pointer_cast<SchemePrimitiveProcedure>(l.front());
+            if(!s)
+                throw eval_error("primitive-procedure-name: a primitive procedure required");
+            return to_object(std::make_shared<SchemeSymbol>(s->name));
+        }}},
     }
 );

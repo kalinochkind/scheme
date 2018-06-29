@@ -212,6 +212,8 @@ struct SchemePrimitiveProcedure: public SchemeProcedure
     std::string external_repr() const override;
 
     ExecutionResult _run(const std::list<std::shared_ptr<SchemeObject>> &) const override;
+
+    bool is_eq(const std::shared_ptr<SchemeObject> &) const override;
 };
 
 

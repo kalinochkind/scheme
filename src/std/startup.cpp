@@ -266,6 +266,9 @@ const std::string startup =
     "  (and (exact? (car x)) (>= (car x) 0) (eq? (cdr x) #f)))) (else #f))) "
     "(define (procedure-arity-min a) (if (exact? a) a (car a))) "
     "(define (procedure-arity-max a) (if (exact? a) a (cdr a)))"
+    "(define (environment-bound? e s) (not (eq? 'unbound (environment-reference-type e s)))) "
+    "(define environment-assignable? environment-bound?) "
+    "(define (environment-definable? e s) #t) "
     "";
 
 
