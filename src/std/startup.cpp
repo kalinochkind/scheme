@@ -271,7 +271,6 @@ const std::string startup =
     "(define (environment-definable? e s) #t) "
     "(define interpreter-environment? top-level-environment?) "
     "(define (make-top-level-environment . a) (apply extend-top-level-environment (cons system-global-environment a))) "
-    "(define (link-variables e1 s1 e2 s2) (environment-define e1 s1 (eval s2 e2))) "
     "";
 
 
