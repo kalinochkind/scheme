@@ -11,7 +11,7 @@ static void prepend_value(std::shared_ptr<SchemePair> &lst, const std::shared_pt
 }
 
 std::pair<std::shared_ptr<SchemeObject>, bool>
-do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level)
+do_quote(std::shared_ptr<ASTNode> node, const Context &context, int quasi_level)
 {
     if(node->type == ast_type_t::STRING || node->type == ast_type_t::INT || node->type == ast_type_t::FLOAT ||
        node->type == ast_type_t::BOOL || node->type == ast_type_t::CHAR)

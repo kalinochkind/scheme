@@ -65,7 +65,7 @@ make_function(const std::string &name, const std::list<std::shared_ptr<ASTNode>>
 
 static SpecialFormPackage package(
     {
-        {"define",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"define",       [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.size() < 1)
                 throw eval_error("define: name and value required");
             if(l.front()->type == ast_type_t::NAME)
@@ -87,7 +87,7 @@ static SpecialFormPackage package(
                 throw eval_error("define: invalid arguments");
         }
         },
-        {"lambda",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"lambda",       [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.size() > 0 && l.front()->type == ast_type_t::NAME)
             {
                 auto ll = l;
@@ -101,14 +101,14 @@ static SpecialFormPackage package(
             return ExecutionResult(make_function("", l, context, "lambda"));
         }
         },
-        {"named-lambda", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"named-lambda", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.size() < 1 || l.front()->type != ast_type_t::LIST || l.front()->list.empty() ||
                l.front()->list.front()->type != ast_type_t::NAME)
                 throw eval_error("named-lambda: name and code required");
             return ExecutionResult(make_function(l.front()->list.front()->value, l, context, "named-lambda"));
         }
         },
-        {"let",          [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"let",          [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.size() < 2)
                 throw eval_error("let: parameters and code required");
             std::list<std::shared_ptr<ASTNode>> pl;
@@ -165,7 +165,7 @@ static SpecialFormPackage package(
             return res;
         }
         },
-        {"let*",         [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"let*",         [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
                 throw eval_error("let*: parameters and code required");
             auto pl = l.front()->list;
@@ -188,7 +188,7 @@ static SpecialFormPackage package(
             return res;
         }
         },
-        {"letrec",       [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"letrec",       [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
                 throw eval_error("letrec: parameters and code required");
             auto pl = l.front()->list;
@@ -215,7 +215,7 @@ static SpecialFormPackage package(
             return res;
         }
         },
-        {"fluid-let",    [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"fluid-let",    [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST)
                 throw eval_error("fluid-let: parameters and code required");
             auto pl = l.front()->list;

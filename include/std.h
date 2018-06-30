@@ -41,7 +41,7 @@ using BuiltinFunction = std::tuple<long long, long long, std::function<Execution
 using FunctionRegistry = Registry<BuiltinFunction>;
 
 using SpecialForm = std::function<ExecutionResult(const std::list<std::shared_ptr<ASTNode>> &,
-                                                  Context &context)>;
+                                                  const Context &context)>;
 using SpecialFormRegistry = Registry<SpecialForm>;
 
 

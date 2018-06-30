@@ -7,8 +7,9 @@
 
 std::chrono::milliseconds start_time;
 
+Context global_context;
 
-static int run_REPL(Context &global_context)
+static int run_REPL()
 {
     ParseResult x;
     while(true)
@@ -34,7 +35,7 @@ static int run_REPL(Context &global_context)
     return 0;
 }
 
-static int run_file(Context &global_context, std::istream &file)
+static int run_file(std::istream &file)
 {
     ParseResult x;
     while(true)
@@ -63,10 +64,10 @@ int main(int argc, char **argv)
 {
     start_time = get_current_time();
     srand(time(0));
-    Context global_context = init_global_context();
+    global_context = init_global_context();
     if (argc <= 1)
     {
-        return run_REPL(global_context);
+        return run_REPL();
     }
     else
     {
@@ -76,6 +77,6 @@ int main(int argc, char **argv)
             std::cerr << "Error: no such file\n";
             return 1;
         }
-        return run_file(global_context, infile);
+        return run_file(infile);
     }
 }

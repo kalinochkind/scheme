@@ -321,12 +321,12 @@ bool Context::get(const std::string &name, std::shared_ptr<SchemeObject> &res) c
     return false;
 }
 
-void Context::set(const std::string &name, std::shared_ptr<SchemeObject> value)
+void Context::set(const std::string &name, std::shared_ptr<SchemeObject> value) const
 {
     (*locals.back())[name] = value;
 }
 
-bool Context::assign(const std::string &name, std::shared_ptr<SchemeObject> value)
+bool Context::assign(const std::string &name, std::shared_ptr<SchemeObject> value) const
 {
     for(auto i = locals.rbegin(); i != locals.rend(); ++i)
     {
@@ -339,13 +339,28 @@ bool Context::assign(const std::string &name, std::shared_ptr<SchemeObject> valu
     return false;
 }
 
+bool Context::unbind(const std::string &name) const
+{
+    for(auto i = locals.rbegin(); i != locals.rend(); ++i)
+    {
+        if((*i)->count(name))
+        {
+            (*i)->erase(name);
+            return true;
+        }
+    }
+    return false;
+}
+
 void Context::new_frame()
 {
+    toplevel = false;
     locals.push_back(std::make_shared<context_map_t>());
 }
 
 void Context::new_frame(const context_map_t &vars)
 {
+    toplevel = false;
     locals.push_back(std::make_shared<context_map_t>(vars));
 }
 

@@ -77,14 +77,18 @@ struct Context
 {
     std::list<std::shared_ptr<context_map_t>> locals;
 
+    bool toplevel{false};
+
     Context() : locals()
     {};
 
     bool get(const std::string &name, std::shared_ptr<SchemeObject> &res) const;
 
-    void set(const std::string &name, std::shared_ptr<SchemeObject> value);
+    void set(const std::string &name, std::shared_ptr<SchemeObject> value) const;
 
-    bool assign(const std::string &name, std::shared_ptr<SchemeObject> value);
+    bool assign(const std::string &name, std::shared_ptr<SchemeObject> value) const;
+
+    bool unbind(const std::string &name) const;
 
     void new_frame();
 
@@ -92,6 +96,8 @@ struct Context
 
     void delete_frame();
 };
+
+extern Context global_context;
 
 struct ASTNode
 {
@@ -105,7 +111,7 @@ struct ASTNode
     ASTNode(ast_type_t type, const std::string &value) : type(type), value(value), list()
     {};
 
-    ExecutionResult evaluate(Context &context) const;
+    ExecutionResult evaluate(const Context &context) const;
 
 };
 
@@ -170,7 +176,7 @@ struct SchemeSpecialForm: public SchemeObject
 
     std::string external_repr() const override;
 
-    ExecutionResult execute(std::list<std::shared_ptr<ASTNode>>, Context &);
+    ExecutionResult execute(std::list<std::shared_ptr<ASTNode>>, const Context &);
 };
 
 struct SchemeProcedure: public SchemeObject
@@ -357,7 +363,7 @@ struct SchemeEnvironment : public SchemeObject
 };
 
 std::pair<std::shared_ptr<SchemeObject>, bool>
-do_quote(std::shared_ptr<ASTNode> node, Context &context, int quasi_level);
+do_quote(std::shared_ptr<ASTNode> node, const Context &context, int quasi_level);
 
 inline std::shared_ptr<SchemeObject> to_object(const std::shared_ptr<SchemeObject> &a)
 {

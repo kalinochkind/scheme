@@ -2,7 +2,7 @@
 
 static SpecialFormPackage package(
     {
-        {"do", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"do", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.size() < 2 || l.front()->type != ast_type_t::LIST || (*next(l.begin()))->type != ast_type_t::LIST)
                 throw eval_error("do: lists required");
             context_map_t new_frame;
@@ -54,7 +54,7 @@ static SpecialFormPackage package(
             }
         }
         },
-        {"cond", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"cond", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             for(auto branch : l)
             {
                 if(branch->type != ast_type_t::LIST || branch->list.size() < 1)
@@ -90,7 +90,7 @@ static SpecialFormPackage package(
             return ExecutionResult(scheme_empty);
         }
         },
-        {"if", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"if", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.size() > 3 || l.size() < 2)
                 throw eval_error("if: 2 or 3 arguments required");
             if(l.front()->evaluate(context).force_value()->to_bool())
@@ -101,7 +101,7 @@ static SpecialFormPackage package(
                 return ExecutionResult(scheme_empty);
         }
         },
-        {"case", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"case", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.empty())
                 throw eval_error("case: argument required");
             auto value = l.front()->evaluate(context).force_value();
@@ -142,7 +142,7 @@ static SpecialFormPackage package(
             return ExecutionResult(scheme_empty);
         }
         },
-        {"and", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"and", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.empty())
                 return ExecutionResult(scheme_true);
             for(auto i = l.begin(); next(i) != l.end(); ++i)
@@ -154,7 +154,7 @@ static SpecialFormPackage package(
             return l.back()->evaluate(context);
         }
         },
-        {"or", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"or", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(l.empty())
                 return ExecutionResult(scheme_false);
             for(auto i = l.begin(); next(i) != l.end(); ++i)
@@ -166,7 +166,7 @@ static SpecialFormPackage package(
             return l.back()->evaluate(context);
         }
         },
-        {"begin", [](const std::list<std::shared_ptr<ASTNode>> &l, Context &context) {
+        {"begin", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
             if(!l.size())
                 throw eval_error("begin: at least one argument required");
             ExecutionResult res;

@@ -269,6 +269,9 @@ const std::string startup =
     "(define (environment-bound? e s) (not (eq? 'unbound (environment-reference-type e s)))) "
     "(define environment-assignable? environment-bound?) "
     "(define (environment-definable? e s) #t) "
+    "(define interpreter-environment? top-level-environment?) "
+    "(define (make-top-level-environment . a) (apply extend-top-level-environment (cons system-global-environment a))) "
+    "(define (link-variables e1 s1 e2 s2) (environment-define e1 s1 (eval s2 e2))) "
     "";
 
 
@@ -276,6 +279,7 @@ Context init_global_context()
 {
     Context global_context;
     global_context.new_frame();
+    global_context.toplevel = true;
     for(auto p : SpecialFormRegistry::all())
     {
         global_context.set(p.first, std::make_shared<SchemeSpecialForm>(p.first));
@@ -300,7 +304,9 @@ Context init_global_context()
         }
         x.node->evaluate(global_context);
     }
+    global_context.set("user-initial-environment", nullptr);
     global_context.new_frame();
-    global_context.set("user-initial-environment", std::make_shared<SchemeEnvironment>(global_context));
+    global_context.toplevel = true;
+    global_context.assign("user-initial-environment", std::make_shared<SchemeEnvironment>(global_context));
     return global_context;
 }

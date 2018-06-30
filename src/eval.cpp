@@ -70,14 +70,14 @@ ExecutionResult SchemeCompoundProcedure::_run(const std::list<std::shared_ptr<Sc
     return res;
 }
 
-ExecutionResult SchemeSpecialForm::execute(std::list<std::shared_ptr<ASTNode>> l, Context &context)
+ExecutionResult SchemeSpecialForm::execute(std::list<std::shared_ptr<ASTNode>> l, const Context &context)
 {
     l.pop_front();
     return SpecialFormRegistry::get(name)(l, context);
 }
 
 
-ExecutionResult ASTNode::evaluate(Context &context) const
+ExecutionResult ASTNode::evaluate(const Context &context) const
 {
 
     if(type == ast_type_t::INT)
