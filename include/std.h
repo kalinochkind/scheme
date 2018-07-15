@@ -15,7 +15,7 @@ inline bool eq_test(const std::shared_ptr<SchemeObject> &a, const std::shared_pt
 
 std::chrono::milliseconds get_current_time();
 
-Context init_global_context();
+void init_scheme();
 
 
 template<class T>

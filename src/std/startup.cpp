@@ -273,10 +273,15 @@ const std::string startup =
     "(define (make-top-level-environment . a) (apply extend-top-level-environment (cons system-global-environment a))) "
     "";
 
+std::chrono::milliseconds start_time;
 
-Context init_global_context()
+Context global_context;
+
+void init_scheme()
 {
-    Context global_context;
+    start_time = get_current_time();
+    srand(time(0));
+    global_context = Context();
     global_context.new_frame();
     global_context.toplevel = true;
     for(auto p : SpecialFormRegistry::all())
@@ -307,5 +312,4 @@ Context init_global_context()
     global_context.new_frame();
     global_context.toplevel = true;
     global_context.assign("user-initial-environment", std::make_shared<SchemeEnvironment>(global_context));
-    return global_context;
 }

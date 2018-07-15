@@ -5,10 +5,6 @@
 #include "parser.h"
 #include "std.h"
 
-std::chrono::milliseconds start_time;
-
-Context global_context;
-
 static int run_REPL()
 {
     ParseResult x;
@@ -62,10 +58,8 @@ static int run_file(std::istream &file)
 
 int main(int argc, char **argv)
 {
-    start_time = get_current_time();
-    srand(time(0));
-    global_context = init_global_context();
-    if (argc <= 1)
+
+    if(argc <= 1)
     {
         return run_REPL();
     }
