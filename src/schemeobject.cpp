@@ -321,12 +321,12 @@ bool Context::get(const std::string &name, std::shared_ptr<SchemeObject> &res) c
     return false;
 }
 
-void Context::set(const std::string &name, std::shared_ptr<SchemeObject> value) const
+void Context::set(const std::string &name, const std::shared_ptr<SchemeObject> &value) const
 {
     (*locals.back())[name] = value;
 }
 
-bool Context::assign(const std::string &name, std::shared_ptr<SchemeObject> value) const
+bool Context::assign(const std::string &name, const std::shared_ptr<SchemeObject> &value) const
 {
     for(auto i = locals.rbegin(); i != locals.rend(); ++i)
     {

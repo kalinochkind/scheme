@@ -84,9 +84,9 @@ struct Context
 
     bool get(const std::string &name, std::shared_ptr<SchemeObject> &res) const;
 
-    void set(const std::string &name, std::shared_ptr<SchemeObject> value) const;
+    void set(const std::string &name, const std::shared_ptr<SchemeObject> &value) const;
 
-    bool assign(const std::string &name, std::shared_ptr<SchemeObject> value) const;
+    bool assign(const std::string &name, const std::shared_ptr<SchemeObject> &value) const;
 
     bool unbind(const std::string &name) const;
 

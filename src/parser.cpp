@@ -43,7 +43,7 @@ static int skip_whitespace(std::istream &is)
     }
 }
 
-static ParseResult read_quoted(std::istream &is, std::shared_ptr<ASTNode> node, const std::string &form)
+static ParseResult read_quoted(std::istream &is, const std::shared_ptr<ASTNode> &node, const std::string &form)
 {
     auto quote = std::make_shared<ASTNode>();
     quote->type = ast_type_t::NAME;
