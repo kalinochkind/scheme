@@ -257,6 +257,65 @@ static void test_strings()
     run_test("(define s \"qwerty\") (set-string-length! s 10) (string-length s)", "10");
 }
 
+static void test_lists()
+{
+    run_test("(define x (list 'a 'b 'c)) (define y x) (define r1 (list? y)) (set-cdr! x 4) (define r2 (list? y)) "
+             "(set-cdr! x x) (define r3 (list? y)) (equal? (list r1 r2 r3) '(#t #f #f))", "#t");
+    run_test("(pair? '())", "#f");
+    run_test("(pair? '#(1 2))", "#f");
+    run_test("(pair? '(1 2))", "#t");
+    run_test("(pair? '(1 . 2))", "#t");
+    run_test("(equal? (car '((a) b c d)) '(a))", "#t");
+    run_test("(equal? (cdr '((a) b c d)) '(b c d))", "#t");
+    run_test("(equal? (vector->list '#(dah dah didah)) '(dah dah didah))", "#t");
+    run_test("(equal? (string->list \"abcd\") '(#\\a #\\b #\\c #\\d))", "#t");
+    run_test("(equal? (substring->list \"abcdef\" 1 3) '(#\\b #\\c))", "#t");
+    run_test("(length '(a (b) (c d e)))", "3");
+    run_test("(null? '())", "#t");
+    run_test("(null? '(()))", "#f");
+    run_test("(list-ref '(a b c d) 2)", "'c");
+    run_test("(equal? (sublist '(a b c d e f) 1 4) '(b c d))", "#t");
+    run_test("(equal? (list-head '(a b c d e f) 2) '(a b))", "#t");
+    run_test("(define l '(a b c d e f)) (eqv? (list-tail l 2) (cddr l))", "#t");
+    run_test("(equal? (append '(a (b)) '((c))) '(a (b) (c)))", "#t");
+    run_test("(append)", "nil");
+    run_test("(equal? (append '(a b) '(c . d)) '(a b c . d))", "#t");
+    run_test("(append '() 'a)", "'a");
+    run_test("(define x '(a b c)) (define y '(d e f)) (define z '(g h)) (equal? (list (append! x y z) x y z)"
+             "'((a b c d e f g h) (a b c d e f g h) (d e f g h) (g h)))", "#t");
+    run_test("(equal? (filter odd? '(1 2 3 4 5)) '(1 3 5))", "#t");
+    run_test("(equal? (remove odd? '(1 2 3 4 5)) '(2 4))", "#t");
+
+    run_test("(equal? (memq 'a '(a b c)) '(a b c))", "#t");
+    run_test("(equal? (memq 'b '(a b c)) '(b c))", "#t");
+    run_test("(memq 'd '(a b c))", "#f");
+    run_test("(memq (list 'a) '(b (a) c))", "#f");
+    run_test("(equal? (member (list 'a) '(b (a) c)) '((a) c))", "#t");
+    run_test("(equal? (memv 101 '(100 101 102)) '(101 102))", "#t");
+
+    run_test("(equal? (map cadr '((a b) (d e) (g h))) '(b e h))", "#t");
+    run_test("(equal? (map + '(1 2 3) '(4 5 6)) '(5 7 9))", "#t");
+    run_test("(equal? (let ((v (make-vector 5))) (for-each (lambda (i) (vector-set! v i (* i i))) '(0 1 2 3 4))v) "
+             "'#(0 1 4 9 16))", "#t");
+
+    run_test("(reduce-left + 0 '(1 2 3 4))", "10");
+    run_test("(reduce-left + 0 '(foo))", "'foo");
+    run_test("(reduce-left + 0 '())", "0");
+    run_test("(equal? (reduce-left list '() '(1 2 3 4)) '(((1 2) 3) 4))", "#t");
+    run_test("(equal? (reduce-right list '() '(1 2 3 4)) '(1 (2 (3 4))))", "#t");
+    run_test("(equal? (fold-right list '() '(1 2 3 4)) '(1 (2 (3 (4 ())))))", "#t");
+    run_test("(equal? (fold-left list '() '(1 2 3 4)) '((((() 1) 2) 3) 4))", "#t");
+
+    run_test("(any integer? '(a 3 b 2.7))", "#t");
+    run_test("(every integer? '(a 3 b 2.7))", "#f");
+    run_test("(any integer? '(a 3.1 b 2.7))", "#f");
+    run_test("(every integer? '(1 2 3. 4))", "#t");
+    run_test("(any < '(3 1 4 1 5) '(2 7 1 8 2))", "#t");
+    run_test("(every < '(3 1 4 1 5) '(2 7 1 8 2))", "#f");
+
+    run_test("(equal? (reverse '(a (b c) d (e (f)))) '((e (f)) d (b c) a))", "#t");
+}
+
 int main()
 {
     if(scheme_true == scheme_false || scheme_true->is_eq(scheme_false) || scheme_false->is_eq(scheme_true) ||
@@ -273,4 +332,5 @@ int main()
     test_equality();
     test_math();
     test_strings();
+    test_lists();
 }
