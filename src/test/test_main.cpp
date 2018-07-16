@@ -81,6 +81,7 @@ static void test_special_forms()
     run_test("((lambda (x) (+ x x)) 5)", "10");
     run_test("(define reverse-subtract (lambda (x y)(- y x)))(reverse-subtract 7 10)", "3");
     run_test("(define foo (let ((x 4)) (lambda (y) (+ x y)))) (foo 6)", "10");
+    run_test("(define x (lambda x (cdr x))) (equal? (x 1 2 3) '(2 3))", "#t");
     run_test("((named-lambda (f x) (+ x x)) 4)", "8");
 
     run_test("(let ((x 2) (y 3))(* x y))", "6");
@@ -141,6 +142,121 @@ static void test_special_forms()
     run_test("(let ((x '(1 3 5 7 9)))(do ((x x (cdr x))(sum 0 (+ sum (car x))))((null? x) sum)))", "25");
 }
 
+static void test_equality()
+{
+    run_test("(define (f x) (+ x x)) (define l '(1 2 q)) (define p (cons car cdr)) (define v '#(1 2 q)) "
+             "(define s \"qwerty\") (define c (make-cell 5)) (define wp (weak-cons 42 37)) "
+             "(and (eq? #t #t) (eq? #f #f) (eq? 'QWE 'Qwe) (eq? 7 7) (eq? 4.6 4.6) (eq? #\\o #\\o) (eq? cons cons) "
+             "(eq? '() '()) (eq? f f) (eq? l l) (eq? p p) (eq? v v) (eq? s s) (eq? c c) (eq? wp wp))", "#t");
+    run_test("(or (eq? '(5 5) 'kek) (eq? #t #f) (eq? 'q 'w) (eq? 4 4.0) (eq? 4 5) (eq? 4.5 5.4) (eq? #\\A #\\B) "
+             "(eq? '() '(())) (eq? (lambda x x) (lambda x 0)) (eq? (cons 1 1) (cons 1 1)) "
+             "(eq? '#() '#()) (eq? \"qw\" \"qw\") (eq? (make-cell '()) (make-cell '())))", "#f");
+    run_test("(define gen-counter (lambda () (let ((n 0)) (lambda () (set! n (+ n 1)) n)))) (let ((g (gen-counter))) "
+             "(eqv? g g))", "#t");
+    run_test("(define gen-counter (lambda () (let ((n 0)) (lambda () (set! n (+ n 1)) n)))) "
+             "(eqv? (gen-counter) (gen-counter))", "#f");
+    run_test("(and (equal? 'a 'a) (equal? '(a) '(a)) (equal? '(a (b) \"c\") '(a (b) \"c\")) "
+             "(equal? (make-vector 5 'a) (make-vector 5 'a)))", "#t");
+    run_test("(or (equal? 'a 'b) (equal? 'a '(a)) (equal? '(a (b) \"c\") '((b) a \"c\")) "
+             "(equal? (make-vector 5 'a) (make-vector 6 'a)) (equal? \"a\" \"A\"))", "#f");
+}
+
+static void test_math()
+{
+    run_test("(equal? (list (number? 5) (number? 5.) (number? #\\5) (exact? 5) (exact? 5.) (inexact? 5) (inexact? 5.) "
+             "(integer? 5) (integer? 5.) (integer? 5.5)) '(#t #t #f #t #f #f #t #t #t #f))", "#t");
+    run_test("(equal? (list (< 1 2) (<= 1 2) (> 1 2) (>= 1 2) (= 1 2) (< 2 1) (<= 2 1) (> 2 1) (>= 2 1) (= 2 1) "
+             "(< 2 2.) (<= 2 2.) (> 2 2.) (>= 2 2.) (= 2 2.)) '(#t #t #f #f #f #f #f #t #t #f #f #t #f #t #t))", "#t");
+    run_test("(equal? (list (zero? 5) (positive? 5) (negative? 5) (zero? -5) (positive? -5) (negative? -5) (zero? 0)) "
+             "'(#f #t #f #f #f #t #t))", "#t");
+    run_test("(equal? (list (+ 3 4 5) (+ 3 4) (+ 3) (+) (* 3 4 5) (* 3 4) (* 3) (*) (- 3 4 5) (- 3 4) (- 3) (/ 3 4)) "
+             "'(12 7 3 0 60 12 3 1 -6 -1 -3 0.75))", "#t");
+    run_test("(1+ (-1+ 5))", "5");
+    run_test("(equal? (list (abs 3) (abs -3) (quotient 13 4) (modulo 13 4) (remainder 13 4) "
+             "(quotient -13 4) (modulo -13 4) (remainder -13 4) (quotient 13 -4) (modulo 13 -4) (remainder 13 -4)"
+             "(quotient -13 -4) (modulo -13 -4) (remainder -13 -4)) '(3 3 3 1 1 -3 3 -1 -3 -3 1 3 -1 -1))", "#t");
+    run_test("(string->number \"13.5\")", "13.5");
+    run_test("(string->number \"13\")", "13");
+    run_test("(equal? (number->string 13) \"13\")", "#t");
+}
+
+static void test_strings()
+{
+    run_test("(equal? (string #\\a #\\A #\\spAce #\\LF #\\newline #\\() \"aA \n\\n(\")", "#t");
+    run_test("(equal? (char->name #\\Space) \"Space\")", "#t");
+    run_test("(equal? (name->char \"Del\") #\\DEL)", "#t");
+    run_test("(equal? (list (char=? #\\a #\\A) (char=? #\\a #\\a) (char=? #\\a #\\b) (char-ci=? #\\a #\\A) "
+             "(char-ci=? #\\a #\\a) (char-ci=? #\\a #\\b)) '(#f #t #f #t #t #f))", "#t");
+    run_test("(equal? (list (char<? #\\a #\\a) (char<? #\\a #\\b) (char-ci<? #\\a #\\A) "
+             "(char-ci<? #\\a #\\a) (char-ci<? #\\A #\\b) (char-ci<? #\\a #\\B)) '(#f #t #f #f #t #t))", "#t");
+    run_test("(equal? (string (char-upcase #\\a) (char-upcase #\\A) (char-upcase #\\5) (char-downcase #\\a) "
+             "(char-downcase #\\A) (char-downcase #\\5)) \"AA5aa5\")", "#t");
+
+    run_test("(equal? (make-string 5 #\\k) \"kkkkk\")", "#t");
+    run_test("(equal? (list->string (list #\\q #\\w)) \"qw\")", "#t");
+    run_test("(define a \"abc\") (define b a) (define c (string-copy a)) (string-set! a 0 #\\Q) "
+             "(equal? (list (eq? a b) (eq? a c) (eq? (string-ref b 0) #\\Q) (eq? (string-ref c 0) #\\Q)) '(#t #f #t #f))",
+             "#t");
+    run_test("(string-length \"qasw\")", "4");
+    run_test("(string=? \"PIE\" \"PIE\") ", "#t");
+    run_test("(string=? \"PIE\" \"pie\") ", "#f");
+    run_test("(string-ci=? \"PIE\" \"pie\")", "#t");
+    run_test("(substring=? \"Alamo\" 1 3 \"cola\" 2 4)", "#t");
+    run_test("(string<? \"cat\" \"dog\")", "#t");
+    run_test("(string<? \"cat\" \"DOG\")", "#f");
+    run_test("(string-ci<? \"cat\" \"DOG\")", "#t");
+    run_test("(string>? \"catkin\" \"cat\")", "#t");
+
+    run_test("(equal? (map string-upper-case?  '(\"\"    \"A\"    \"art\"  \"Art\"  \"ART\")) '(#f #t #f #f #t))", "#t");
+    run_test("(define str \"ABCDEFG\") (substring-downcase! str 3 5) (equal? str \"ABCdeFG\")", "#t");
+
+    run_test("(equal? (list (string-append) (string-append \"*\" \"ace\" \"*\") (string-append \"\" \"\" \"\")) "
+             "'(\"\" \"*ace*\" \"\"))", "#t");
+    run_test("(equal? (substring \"arduous\" 2 5) \"duo\")", "#t");
+    run_test("(equal? (string-tail \"uncommon\" 2) \"common\")", "#t");
+    run_test("(equal? (list (string-pad-left \"hello\" 4) (string-pad-left \"hello\" 8) (string-pad-left \"hello\" 8 #\\*) "
+             "(string-pad-right \"hello\" 4) (string-pad-right \"hello\" 8)) '(\"ello\" \"   hello\" \"***hello\" \"hell\" \"hello   \"))", "#t");
+
+    run_test("(string-search-forward \"rat\" \"pirate rating\")", "2");
+    run_test("(substring-search-forward \"rat\" \"pirate rating\" 4 13)", "7");
+    run_test("(substring-search-forward \"rat\" \"pirate rating\" 9 13)", "#f");
+    run_test("(string-search-backward \"rat\" \"pirate rating\")", "10");
+    run_test("(substring-search-backward \"rat\" \"pirate rating\" 1 8)", "5");
+    run_test("(substring-search-backward \"rat\" \"pirate rating\" 9 13)", "#f");
+    run_test("(equal? (list (string-search-all \"rat\" \"pirate\") (string-search-all \"rat\" \"pirate rating\") "
+             "(substring-search-all \"rat\" \"pirate rating\" 4 13) (substring-search-all \"rat\" \"pirate rating\" 9 13)) "
+             "'((2) (2 7) (7) ()))", "#t");
+    run_test("(substring? \"rat\" \"pirate\")", "#t");
+    run_test("(substring? \"rat\" \"outrage\")", "#f");
+    run_test("(substring? \"\" \"outrage\")", "#t");
+
+    run_test("(string-find-next-char \"Adam\" #\\A)", "0");
+    run_test("(substring-find-next-char \"Adam\" 1 4 #\\A)", "#f");
+    run_test("(substring-find-next-char-ci \"Adam\" 1 4 #\\A)", "2");
+
+    run_test("(string-match-forward \"mirror\" \"micro\")", "2");
+    run_test("(string-match-forward \"a\" \"b\")", "0");
+    run_test("(string-match-backward-ci \"BULBOUS\" \"fractious\")", "3");
+    run_test("(string-prefix? \"abc\" \"abcdef\")", "#t");
+    run_test("(string-prefix? \"\" \"afhkm\")", "#t");
+    run_test("(string-suffix? \"ous\" \"bulbous\")", "#t");
+    run_test("(string-suffix? \"\" \"bulbous\")", "#t");
+
+    run_test("(define str \"a few words\") (equal? (list (string-replace str #\\space #\\-) (substring-replace str 2 9 #\\space #\\-) str) "
+             "'(\"a-few-words\" \"a few-words\" \"a few words\"))", "#t");
+    run_test("(define str \"a few words\") (string-replace! str #\\space #\\-) (equal? str \"a-few-words\")", "#t");
+    run_test("(define s (make-string 10 #\\space)) (substring-fill! s 2 8 #\\*) (equal? s \"  ******  \")", "#t");
+    run_test("(define answer (make-string 9 #\\*)) (substring-move-left! \"start\" 0 5 answer 0) (equal? answer \"start****\")", "#t");
+    run_test("(define answer \"start****\") (substring-move-right! \"-end\" 0 4 answer 5) (equal? answer \"start-end\")", "#t");
+    run_test("(equal? (reverse-string \"foo bar baz\") \"zab rab oof\")", "#t");
+    run_test("(equal? (reverse-substring \"foo bar baz\" 4 7) \"rab\")", "#t");
+    run_test("(equal? (let ((foo \"foo bar baz\")) (reverse-string! foo) foo) \"zab rab oof\")", "#t");
+    run_test("(equal? (let ((foo \"foo bar baz\")) (reverse-substring! foo 4 7) foo) \"foo rab baz\")", "#t");
+
+    run_test("(define s \"qwertyuiop\") (set-string-length! s 5) (equal? s \"qwert\")", "#t");
+    run_test("(define s \"qwerty\") (set-string-length! s 10) (string-length s)", "10");
+}
+
 int main()
 {
     if(scheme_true == scheme_false || scheme_true->is_eq(scheme_false) || scheme_false->is_eq(scheme_true) ||
@@ -154,4 +270,7 @@ int main()
     }
     test_basic();
     test_special_forms();
+    test_equality();
+    test_math();
+    test_strings();
 }
