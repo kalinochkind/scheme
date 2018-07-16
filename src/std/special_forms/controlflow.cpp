@@ -72,7 +72,7 @@ static SpecialFormPackage package(
                     if(branch->list.size() == 3 && ((*next(branch->list.begin()))->type == ast_type_t::NAME &&
                                                     (*next(branch->list.begin()))->value == "=>"))
                     {
-                        auto func = std::dynamic_pointer_cast<SchemeCompoundProcedure>(
+                        auto func = std::dynamic_pointer_cast<SchemeProcedure>(
                             branch->list.back()->evaluate(context).force_value());
                         if(!func)
                             throw eval_error("cond: => requires a function");
