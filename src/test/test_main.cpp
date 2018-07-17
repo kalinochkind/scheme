@@ -316,6 +316,118 @@ static void test_lists()
     run_test("(equal? (reverse '(a (b c) d (e (f)))) '((e (f)) d (b c) a))", "#t");
 }
 
+static void test_vectors()
+{
+    run_test("(equal? (make-vector 5 'a) '#(a a a a a))", "#t");
+    run_test("(equal? (vector 5 'a) '#(5 a))", "#t");
+    run_test("(define a (list->vector '(1 2 3))) (define b a) (define c (vector-copy a)) (vector-set! a 0 0) "
+             "(equal? (list (eq? a b) (eq? a c) (vector-ref b 0) (vector-ref c 0) (vector-length b)) '(#t #f 0 1 3))", "#t");
+    run_test("(equal? (make-initialized-vector 5 (lambda (x) (* x x))) '#(0 1 4 9 16))", "#t");
+    run_test("(vector-length (vector-grow '#(1 2 3) 5))", "5");
+    run_test("(equal? (vector-map cadr '#((a b) (d e) (g h))) '#(b e h))", "#t");
+    run_test("(vector-ref '#(1 1 2 3 5 8 13 21) 5)", "8");
+    run_test("(equal? (let ((vec (vector 0 '(2 2 2 2) \"Anna\"))) (vector-set! vec 1 '(\"Sue\" \"Sue\")) vec) "
+             "'#(0 (\"Sue\" \"Sue\") \"Anna\"))", "#t");
+    run_test("(equal? (subvector '#(0 1 2 3 4 5) 2 4) '#(2 3))", "#t");
+    run_test("(equal? (vector-head '#(0 1 2 3 4 5) 2) '#(0 1))", "#t");
+    run_test("(equal? (vector-tail '#(0 1 2 3 4 5) 2) '#(2 3 4 5))", "#t");
+    run_test("(define v '#(0 1 2 3 4)) (subvector-fill! v 1 3 'q) (equal? v '#(0 q q 3 4))", "#t");
+}
+
+static void test_misc()
+{
+    run_test("(not 5)", "#f");
+    run_test("(not #f)", "#t");
+    run_test("(boolean/and #f #t #t)", "#f");
+    run_test("(boolean/and 'f #t #t)", "#t");
+    run_test("(boolean/or #f)", "#f");
+    run_test("(boolean/or #f #t #t)", "#t");
+
+    run_test("(symbol? 'car)", "#t");
+    run_test("(symbol? \"car\")", "#f");
+    run_test("(symbol? (string->uninterned-symbol \"car\"))", "#t");
+    run_test("(equal? \"Kek\" (symbol->string (string->symbol \"Kek\")))", "#t");
+    run_test("(equal? 'Kek (string->symbol \"Kek\"))", "#f");
+    run_test("(equal? 'Kek (intern \"Kek\"))", "#t");
+    run_test("'Kek", "'kek");
+    run_test("(eq? (string->uninterned-symbol \"car\") (string->uninterned-symbol \"car\"))", "#f");
+    run_test("(symbol-append 'foo- 'bar)", "'foo-bar");
+    run_test("(symbol-append 'foo- (string->uninterned-symbol \"baz\"))", "'foo-baz");
+    run_test("(symbol-append 'foo- (string->symbol \"BAZ\"))", "(string->symbol \"foo-BAZ\")");
+    run_test("(symbol<? 'a 'b)", "#t");
+    run_test("(symbol<? 'B 'a)", "#f");
+
+    run_test("(cell? (make-cell make-cell))", "#t");
+    run_test("(cell-contents (make-cell 42))", "42");
+    run_test("(define c (make-cell 42)) (set-cell-contents! c 37) (cell-contents c)", "37");
+
+    run_test("(force (delay (+ 1 2)))", "3");
+    run_test("(equal? (let ((p (delay (+ 1 2)))) (list (force p) (force p))) '(3 3))", "#t");
+    run_test("(define p (delay 5)) (promise-forced? p)", "#f");
+    run_test("(define p (delay 5)) (force p) (promise-forced? p)", "#t");
+    run_test("(define p (delay 5)) (force p) (promise-value p)", "5");
+    run_test("(define count 0) (define p (delay (begin (set! count (+ count 1)) (* x 3)))) (define x 5) "
+             "(force p) (force p) count", "1");
+
+    run_test("(define p (weak-cons 37 42)) (weak-pair/car? p)", "#f");
+    run_test("(define a 37) (define p (weak-cons a 42)) (weak-pair/car? p)", "#t");
+    run_test("(define a 37) (define p (weak-cons a 42)) (weak-car p)", "37");
+    run_test("(define a 37) (define p (weak-cons a 42)) (define a) (weak-pair/car? p)", "#f");
+    run_test("(define a 37) (define p (weak-cons a 42)) (define a) (weak-car p)", "#f");
+    run_test("(define p (weak-cons 37 42)) (weak-set-car! p car) (weak-car p)", "car");
+    run_test("(define p (weak-cons 37 42)) (weak-cdr p)", "42");
+    run_test("(define p (weak-cons 37 42)) (weak-set-cdr! p 337) (weak-cdr p)", "337");
+}
+
+static void test_procedures()
+{
+    run_test("(apply + 3 4 '(5 6))", "18");
+    run_test("(procedure? car)", "#t");
+    run_test("(primitive-procedure? car)", "#t");
+    run_test("(compound-procedure? car)", "#f");
+    run_test("(procedure? (lambda x x))", "#t");
+    run_test("(primitive-procedure? (lambda x x))", "#f");
+    run_test("(compound-procedure? (lambda x x))", "#t");
+    run_test("(equal? (procedure-arity (lambda () 3)) '(0 . 0))", "#t");
+    run_test("(equal? (procedure-arity (lambda (x) 3)) '(1 . 1))", "#t");
+    run_test("(equal? (procedure-arity car) '(1 . 1))", "#t");
+    run_test("(equal? (procedure-arity /) '(1 . #f))", "#t");
+    run_test("(equal? (procedure-arity (lambda (x #!optional y) x)) '(1 . 2))", "#t");
+    run_test("(equal? (procedure-arity (lambda (x #!optional y q #!rest z) x)) '(1 . #f))", "#t");
+    run_test("(equal? (procedure-arity make-vector) '(1 . 2))", "#t");
+    run_test("((make-primitive-procedure 'car) '(1 2))", "1");
+    run_test("(primitive-procedure-name car)", "'car");
+    run_test("(define (f x #!optional y) (cons x y)) (equal? (f 1 2) '(1 . 2))", "#t");
+    run_test("(define (f x #!optional y) (cons x y)) (default-object? (cdr (f 1 2)))", "#f");
+    run_test("(define (f x #!optional y) (cons x y)) (default-object? (cdr (f 1)))", "#t");
+
+    run_test("(environment? (the-environment))", "#t");
+    run_test("(environment-has-parent? (the-environment))", "#t");
+    run_test("(environment-has-parent? (environment-parent (the-environment)))", "#f");
+    run_test("(define x) (equal? (environment-bound-names (the-environment)) '(x))", "#t");
+    run_test("(define x) (define y 5) (equal? (environment-bindings (the-environment)) '((x) (y 5)))", "#t");
+    run_test("(environment-reference-type (the-environment) 'map)", "'normal");
+    run_test("(environment-reference-type (the-environment) 'kek)", "'unbound");
+    run_test("(environment-reference-type (the-environment) 'define)", "'macro");
+    run_test("(define define) (environment-reference-type (the-environment) 'define)", "'unassigned");
+    run_test("(define define) (environment-reference-type (environment-parent (the-environment)) 'define)", "'macro");
+    run_test("(define define) (environment-bound? (the-environment) 'define)", "#t");
+    run_test("(define define) (environment-assigned? (the-environment) 'define)", "#f");
+    run_test("(define x 5) (environment-lookup (the-environment) 'x)", "5");
+    run_test("(define x 5) (environment-assign! (the-environment) 'x 6) x", "6");
+    run_test("(environment-define (the-environment) 'x 6) x", "6");
+    run_test("(define x 5) (eval '(+ x x) (the-environment))", "10");
+    run_test("(environment-has-parent? user-initial-environment)", "#t");
+    run_test("(environment-has-parent? system-global-environment)", "#f");
+    run_test("(define x 5) (environment-lookup (nearest-repl/environment) 'x)", "5");
+    run_test("(define map 5) (ge system-global-environment) (procedure? map)", "#t");
+    run_test("(define map 5) (ge system-global-environment) (ge user-initial-environment) (procedure? map)", "#f");
+    run_test("(define env (make-root-top-level-environment '(x) '(5))) (ge env) x", "5");
+    run_test("(define env (make-top-level-environment '(x) '(5))) (ge env) (procedure? map)", "#t");
+    run_test("(define env (make-top-level-environment '(x) '(5))) (ge env) x", "5");
+}
+
+
 int main()
 {
     if(scheme_true == scheme_false || scheme_true->is_eq(scheme_false) || scheme_false->is_eq(scheme_true) ||
@@ -333,4 +445,7 @@ int main()
     test_math();
     test_strings();
     test_lists();
+    test_vectors();
+    test_misc();
+    test_procedures();
 }

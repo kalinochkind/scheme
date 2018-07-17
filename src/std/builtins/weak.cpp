@@ -5,7 +5,7 @@ static FunctionPackage package(
         {"weak-cons", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             return to_object(std::make_shared<SchemeWeakPair>(l.front(), l.back()));
         }}},
-        {"weak-pair/car?", {2, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+        {"weak-pair/car?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto wp = std::dynamic_pointer_cast<SchemeWeakPair>(l.front());
             if(!wp)
                 throw eval_error("weak-pair/car?: weak pair required");
