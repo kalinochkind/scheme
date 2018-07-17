@@ -58,7 +58,7 @@ static int run_file(std::istream &file)
 
 int main(int argc, char **argv)
 {
-
+    init_scheme();
     if(argc <= 1)
     {
         return run_REPL();
