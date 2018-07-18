@@ -349,6 +349,11 @@ void SchemeFilePort::close_all_files()
     open_files.clear();
 }
 
+std::string SchemeStringPort::external_repr() const
+{
+    return "<string port>";
+}
+
 
 bool Context::get(const std::string &name, std::shared_ptr<SchemeObject> &res) const
 {

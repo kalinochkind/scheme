@@ -402,6 +402,16 @@ struct SchemeFilePort : public SchemePort
     ~SchemeFilePort() override;
 };
 
+struct SchemeStringPort: public SchemePort
+{
+    using SchemePort::SchemePort;
+
+    std::string external_repr() const override;
+
+    void close_input() override {};
+    void close_output() override {};
+};
+
 std::pair<std::shared_ptr<SchemeObject>, bool>
 do_quote(std::shared_ptr<ASTNode> node, const Context &context, int quasi_level);
 

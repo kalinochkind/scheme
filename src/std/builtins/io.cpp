@@ -1,4 +1,4 @@
-#include <iostream>
+#include <sstream>
 #include <fstream>
 #include "parser.h"
 #include "std.h"
@@ -9,6 +9,12 @@ static FunctionPackage package(
             if(!current_output_port->output_stream)
                 throw eval_error("display: i/o error");
             (*current_output_port->output_stream) << l.front()->printable();
+            return scheme_empty;
+        }}},
+        {"write", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            if(!current_output_port->output_stream)
+                throw eval_error("write: i/o error");
+            (*current_output_port->output_stream) << l.front()->external_repr();
             return scheme_empty;
         }}},
         {"read", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &) {
@@ -51,9 +57,9 @@ static FunctionPackage package(
         }}},
         {"close-output-port", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
             auto p = std::dynamic_pointer_cast<SchemePort>(l.front());
-            if(!p || p->type == port_type_t::OUTPUT)
-                    throw eval_error("close-input-port: an input port required");
-            p->close_input();
+            if(!p || p->type == port_type_t::INPUT)
+                throw eval_error("close-output-port: an output port required");
+            p->close_output();
             return scheme_empty;
         }}},
         {"open-input-file", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -97,6 +103,49 @@ static FunctionPackage package(
         {"close-all-open-files", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &) {
             SchemeFilePort::close_all_files();
             return scheme_empty;
+        }}},
+        {"open-input-string", {1, 3, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto s = std::dynamic_pointer_cast<SchemeString>(l.front());
+            if(!s)
+                throw eval_error("open-input-string: a string required");
+            long long start = 0, end = s->value.length();
+            if(l.size() >= 2)
+            {
+                auto pa = std::dynamic_pointer_cast<SchemeInt>(*next(l.begin()));
+                if(!pa)
+                    throw eval_error("open-input-string: invalid range");
+                start = pa->value;
+                if(l.size() == 3)
+                {
+                    auto pb = std::dynamic_pointer_cast<SchemeInt>(l.back());
+                    if(!pb)
+                        throw eval_error("open-input-string: invalid range");
+                    end = pb->value;
+                }
+            }
+            if(start < 0 || end > (long long) s->value.length() || start > end)
+                throw eval_error("open-input-string: invalid range");
+            auto str = s->value.substr(start, end - start);
+            auto is = std::make_shared<std::istringstream>(str);
+            auto f = std::make_shared<SchemeStringPort>(port_type_t::INPUT);
+            f->input_stream = is;
+            return to_object(f);
+        }}},
+        {"open-output-string", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &) {
+            auto os = std::make_shared<std::ostringstream>();
+            auto f = std::make_shared<SchemeStringPort>(port_type_t::OUTPUT);
+            f->output_stream = os;
+            return to_object(f);
+        }}},
+        {"get-output-string", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto p = std::dynamic_pointer_cast<SchemeStringPort>(l.front());
+            if(!p || p->type == port_type_t::INPUT)
+                throw eval_error("get-output-string: an output string port required");
+            auto os = std::dynamic_pointer_cast<std::ostringstream>(p->output_stream);
+            if(!os)
+                throw eval_error("get-output-string: invalid port");
+            auto s = std::make_shared<SchemeString>(os->str());
+            return to_object(s);
         }}},
     }
 );
