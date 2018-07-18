@@ -7,6 +7,7 @@ std::shared_ptr<SchemeObject> scheme_true = std::make_shared<SchemeBool>(true);
 std::shared_ptr<SchemeObject> scheme_false = std::make_shared<SchemeBool>(false);
 std::shared_ptr<SchemeObject> scheme_empty = std::make_shared<SchemeSymbol>("");
 std::shared_ptr<SchemeObject> scheme_nil = std::make_shared<SchemePair>(nullptr, nullptr);
+std::shared_ptr<SchemeFilePort> default_port = SchemeFilePort::create_default_port();
 
 
 std::shared_ptr<SchemeObject> ExecutionResult::force_value()

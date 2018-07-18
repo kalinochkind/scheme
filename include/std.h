@@ -7,6 +7,7 @@
 #include "schemeobject.h"
 
 extern std::shared_ptr<SchemeObject> scheme_true, scheme_false, scheme_empty, scheme_nil;
+extern std::shared_ptr<SchemeFilePort> default_port;
 
 inline bool eq_test(const std::shared_ptr<SchemeObject> &a, const std::shared_ptr<SchemeObject> &b)
 {

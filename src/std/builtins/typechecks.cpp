@@ -66,5 +66,13 @@ static FunctionPackage package(
             auto p = std::dynamic_pointer_cast<SchemeWeakPair>(l.front());
             return p ? scheme_true : scheme_false;
         }}},
+        {"input-port?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto p = std::dynamic_pointer_cast<SchemePort>(l.front());
+            return p && (p->type == port_type_t::INPUT || p->type == port_type_t::IO) ? scheme_true : scheme_false;
+        }}},
+        {"output-port?", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto p = std::dynamic_pointer_cast<SchemePort>(l.front());
+            return p && (p->type == port_type_t::OUTPUT || p->type == port_type_t::IO) ? scheme_true : scheme_false;
+        }}},
     }
 );

@@ -271,16 +271,23 @@ const std::string startup =
     "(define (environment-definable? e s) #t) "
     "(define interpreter-environment? top-level-environment?) "
     "(define (make-top-level-environment . a) (apply extend-top-level-environment (cons system-global-environment a))) "
+    "(define (port? p) (or (input-port? p) (output-port? p))) "
+    "(define (i/o-port? p) (and (input-port? p) (output-port? p))) "
+    "(define (close-port p) (if (input-port? p) (close-input-port p)) (if (output-port? p) (close-output-port p))) "
     "";
 
 std::chrono::milliseconds start_time;
 
 Context global_context;
 
+std::shared_ptr<SchemePort> current_input_port, current_output_port;
+
 void init_scheme()
 {
     start_time = get_current_time();
     srand(time(0));
+    current_input_port = default_port;
+    current_output_port = default_port;
     global_context = Context();
     global_context.new_frame();
     global_context.toplevel = true;
@@ -308,6 +315,7 @@ void init_scheme()
         }
         x.node->evaluate(global_context);
     }
+    global_context.set("console-i/o-port", default_port);
     global_context.set("user-initial-environment", nullptr);
     global_context.new_frame();
     global_context.toplevel = true;

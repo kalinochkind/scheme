@@ -1,4 +1,5 @@
 #include <set>
+#include <iostream>
 #include "std.h"
 #include "char.h"
 
@@ -307,6 +308,47 @@ std::string SchemeEnvironment::external_repr() const
 {
     return "<environment>";
 }
+
+std::string SchemeFilePort::external_repr() const
+{
+    return "<file port>";
+}
+
+void SchemeFilePort::close_input()
+{
+    input_stream = nullptr;
+}
+
+void SchemeFilePort::close_output()
+{
+    output_stream = nullptr;
+}
+
+std::shared_ptr<SchemeFilePort> SchemeFilePort::create_default_port()
+{
+    auto p = std::make_shared<SchemeFilePort>(port_type_t::IO);
+    p->input_stream = std::shared_ptr<std::istream>(&std::cin, [](void*){});
+    p->output_stream = std::shared_ptr<std::ostream>(&std::cout, [](void*){});
+    return p;
+}
+
+SchemeFilePort::~SchemeFilePort()
+{
+    open_files.erase(this);
+}
+
+std::set<SchemeFilePort*> SchemeFilePort::open_files;
+
+void SchemeFilePort::close_all_files()
+{
+    for(auto fp : open_files)
+    {
+        fp->close_input();
+        fp->close_output();
+    }
+    open_files.clear();
+}
+
 
 bool Context::get(const std::string &name, std::shared_ptr<SchemeObject> &res) const
 {

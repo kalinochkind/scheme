@@ -5,8 +5,10 @@
 #include <list>
 #include <memory>
 #include <map>
+#include <set>
 #include <chrono>
 #include <vector>
+#include <istream>
 
 
 struct SchemeObject;
@@ -167,11 +169,11 @@ struct SchemeFloat : public SchemeObject
     bool is_eq(const std::shared_ptr<SchemeObject> &) const override;
 };
 
-struct SchemeSpecialForm: public SchemeObject
+struct SchemeSpecialForm : public SchemeObject
 {
     std::string name;
 
-    explicit SchemeSpecialForm(const std::string &name): name(name)
+    explicit SchemeSpecialForm(const std::string &name) : name(name)
     {}
 
     std::string external_repr() const override;
@@ -179,7 +181,7 @@ struct SchemeSpecialForm: public SchemeObject
     ExecutionResult execute(std::list<std::shared_ptr<ASTNode>>, const Context &);
 };
 
-struct SchemeProcedure: public SchemeObject
+struct SchemeProcedure : public SchemeObject
 {
     std::string name{""};
     Arity arity{0, 0};
@@ -190,7 +192,7 @@ struct SchemeProcedure: public SchemeObject
 };
 
 
-struct SchemeCompoundProcedure: public SchemeProcedure
+struct SchemeCompoundProcedure : public SchemeProcedure
 {
     std::list<std::string> params;
     std::list<ASTNode> body;
@@ -206,7 +208,7 @@ struct SchemeCompoundProcedure: public SchemeProcedure
     ExecutionResult _run(const std::list<std::shared_ptr<SchemeObject>> &) const override;
 };
 
-struct SchemePrimitiveProcedure: public SchemeProcedure
+struct SchemePrimitiveProcedure : public SchemeProcedure
 {
     SchemePrimitiveProcedure(const std::string &name_, long long minargs, long long maxargs)
     {
@@ -360,6 +362,44 @@ struct SchemeEnvironment : public SchemeObject
     {};
 
     std::string external_repr() const override;
+};
+
+
+enum class port_type_t
+{
+    INPUT, OUTPUT, IO
+};
+
+struct SchemePort : public SchemeObject
+{
+    port_type_t type;
+    std::shared_ptr<std::istream> input_stream{nullptr};
+    std::shared_ptr<std::ostream> output_stream{nullptr};
+
+    SchemePort(port_type_t type_): type(type_) {};
+
+    virtual void close_input() = 0;
+    virtual void close_output() = 0;
+};
+
+extern std::shared_ptr<SchemePort> current_input_port, current_output_port;
+
+struct SchemeFilePort : public SchemePort
+{
+    static std::set<SchemeFilePort*> open_files;
+
+    using SchemePort::SchemePort;
+
+    static std::shared_ptr<SchemeFilePort> create_default_port();
+
+    std::string external_repr() const override;
+
+    void close_input() override;
+    void close_output() override;
+
+    static void close_all_files();
+
+    ~SchemeFilePort() override;
 };
 
 std::pair<std::shared_ptr<SchemeObject>, bool>
