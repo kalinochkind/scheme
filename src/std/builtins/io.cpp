@@ -3,6 +3,19 @@
 #include "parser.h"
 #include "std.h"
 
+static std::shared_ptr<SchemeObject> scheme_eof = std::make_shared<SchemeSymbol>("eof");
+
+static std::shared_ptr<SchemePort>
+get_input_port(const std::list<std::shared_ptr<SchemeObject>> &l, const std::string &proc)
+{
+    auto port = current_input_port;
+    if(l.size())
+        port = std::dynamic_pointer_cast<SchemePort>(l.front());
+    if(!port || !port->input_stream)
+        throw eval_error(proc + ": bad port");
+    return port;
+}
+
 static FunctionPackage package(
     {
         {"display", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
@@ -17,16 +30,36 @@ static FunctionPackage package(
             (*current_output_port->output_stream) << l.front()->external_repr();
             return scheme_empty;
         }}},
-        {"read", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &) {
+        {"read-char", {0, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto port = get_input_port(l, "read-char");
+            int c = (*port->input_stream).get();
+            if(c == EOF)
+                return scheme_eof;
+            return to_object(std::make_shared<SchemeChar>(c));
+        }}},
+        {"peek-char", {0, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto port = get_input_port(l, "peek-char");
+            int c = (*port->input_stream).peek();
+            if(c == EOF)
+                return scheme_eof;
+            return to_object(std::make_shared<SchemeChar>(c));
+        }}},
+        {"read", {0, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto port = get_input_port(l, "read");
             Context dummy;
-            if(!current_input_port->input_stream)
-                throw eval_error("read: i/o error");
-            auto x = read_object(*current_input_port->input_stream);
+            auto x = read_object(*port->input_stream);
             if(x.result == parse_result_t::ERROR)
                 throw eval_error("read: parse error: " + x.error);
             if(x.result == parse_result_t::END)
-                return to_object(std::make_shared<SchemeSymbol>("eof"));
+                return scheme_eof;
             return do_quote(x.node, dummy, 0).first;
+        }}},
+        {"read-line", {0, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto port = get_input_port(l, "read-line");
+            std::string s;
+            if(!std::getline(*port->input_stream, s))
+                return scheme_eof;
+            return to_object(std::make_shared<SchemeString>(s));
         }}},
         {"current-input-port", {0, 0, [](const std::list<std::shared_ptr<SchemeObject>> &) {
             return to_object(current_input_port);

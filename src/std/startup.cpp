@@ -293,6 +293,7 @@ const std::string startup =
     "(define (call-with-output-string p) (let ((port (open-output-string))) (p port) (get-output-string port))) "
     "(define (with-output-to-string t) (call-with-output-string (lambda (p) (with-output-to-port p t)))) "
     "(define (write-to-string object) (with-output-to-string (lambda () (write object)))) "
+    "(define (eof-object? o) (eq? o 'eof)) "
     "";
 
 std::chrono::milliseconds start_time;
