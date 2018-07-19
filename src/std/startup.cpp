@@ -19,7 +19,6 @@ const std::string startup =
     "(define (zero? x) (= x 0)) "
     "(define (list . x) x) "
     "(define nil (list)) "
-    "(define (newline) (display \"\\n\")) "
     "(define (min a . l)"
     "  (define (min-iter a l)"
     "    (cond ((null? l) a) ((< a (car l)) (min-iter a (cdr l))) (else (min-iter (car l) (cdr l)))))"
@@ -294,6 +293,14 @@ const std::string startup =
     "(define (with-output-to-string t) (call-with-output-string (lambda (p) (with-output-to-port p t)))) "
     "(define (write-to-string object) (with-output-to-string (lambda () (write object)))) "
     "(define (eof-object? o) (eq? o 'eof)) "
+    "(define write-char display) "
+    "(define write-string display) "
+    "(define (write-substring s a b . p) (apply display (substring s a b) p)) "
+    "(define (newline . p) (apply display #\\LF p)) "
+    "(define fresh-line newline) "
+    "(define (write-line o . p) (apply write o p) (apply newline p)) "
+    "(define (beep . p) (apply display #\\BEL p)) "
+    "(define (clear . p) (apply display \"\\033[2J\\033[1;1H\" p)) "
     "";
 
 std::chrono::milliseconds start_time;

@@ -16,18 +16,32 @@ get_input_port(const std::list<std::shared_ptr<SchemeObject>> &l, const std::str
     return port;
 }
 
+static std::shared_ptr<SchemePort>
+get_output_port(const std::list<std::shared_ptr<SchemeObject>> &l, const std::string &proc, size_t skip)
+{
+    auto port = current_output_port;
+    if(l.size() > skip)
+        port = std::dynamic_pointer_cast<SchemePort>(*next(l.begin(), skip));
+    if(!port || !port->output_stream)
+        throw eval_error(proc + ": bad port");
+    return port;
+}
+
 static FunctionPackage package(
     {
-        {"display", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(!current_output_port->output_stream)
-                throw eval_error("display: i/o error");
-            (*current_output_port->output_stream) << l.front()->printable();
+        {"display", {1, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto port = get_output_port(l, "display", 1);
+            (*port->output_stream) << l.front()->printable();
             return scheme_empty;
         }}},
-        {"write", {1, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
-            if(!current_output_port->output_stream)
-                throw eval_error("write: i/o error");
-            (*current_output_port->output_stream) << l.front()->external_repr();
+        {"write", {1, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto port = get_output_port(l, "write", 1);
+            (*port->output_stream) << l.front()->external_repr();
+            return scheme_empty;
+        }}},
+        {"flush-output", {0, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto port = get_output_port(l, "flush-output", 0);
+            (*port->output_stream).flush();
             return scheme_empty;
         }}},
         {"read-char", {0, 1, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
