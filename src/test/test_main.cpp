@@ -427,6 +427,24 @@ static void test_procedures()
     run_test("(define env (make-top-level-environment '(x) '(5))) (ge env) x", "5");
 }
 
+static void test_io()
+{
+    run_test("(and (port? console-i/o-port) (i/o-port? console-i/o-port) (input-port? (current-input-port)) "
+             "(output-port? (current-output-port)))", "#t");
+    run_test("(define s (open-input-string \"qwe\\nrty\\nuio\")) (close-all-open-files) (read-line s) "
+             "(equal? (read-line s) \"rty\")", "#t");
+    run_test("(define s (open-output-string)) (close-all-open-files) (display 'qwe s) (newline s) "
+             "(equal? (get-output-string s) \"qwe\\n\")", "#t");
+    run_test("(equal? (with-input-from-string \"(a b c) (d e f)\" read) '(a b c))", "#t");
+    run_test("(equal? (call-with-output-string (lambda (p) (display 42 p))) \"42\")", "#t");
+    run_test("(define i (open-input-string \"qwe rty\")) (define o (open-output-string)) (set-current-input-port! i) "
+             "(set-current-output-port! o) (write (read-char)) (equal? (get-output-string o) \"#\\\\q\")", "#t");
+    run_test("(equal? (with-output-to-string (lambda () (write 'abc))) \"abc\")", "#t");
+    run_test("(equal? (write-to-string \"1 2 3\") \"\\\"1 2 3\\\"\")", "#t");
+    run_test("(equal? (with-input-from-string \"qw\" (lambda () "
+             "(list (peek-char) (read-char) (read-char) (peek-char) (read-char)))) '(#\\q #\\q #\\w eof eof))", "#t");
+}
+
 
 int main()
 {
@@ -448,4 +466,5 @@ int main()
     test_vectors();
     test_misc();
     test_procedures();
+    test_io();
 }
