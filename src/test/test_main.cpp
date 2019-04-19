@@ -178,6 +178,9 @@ static void test_math()
     run_test("(string->number \"13.5\")", "13.5");
     run_test("(string->number \"13\")", "13");
     run_test("(equal? (number->string 13) \"13\")", "#t");
+    run_test("(rational? -2/3)", "#t");
+    run_test("5/2", "2.5");
+
 }
 
 static void test_strings()

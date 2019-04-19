@@ -91,14 +91,28 @@ ExecutionResult ASTNode::evaluate(const Context &context) const
             throw eval_error("Invalid integer: " + value);
         }
     if(type == ast_type_t::FLOAT)
+    {
+        double float_val;
         try
         {
-            return ExecutionResult(std::make_shared<SchemeFloat>(stod(value)));
+            auto slash_pos = value.find('/');
+            if (slash_pos != std::string::npos)
+            {
+                auto num = value.substr(0, slash_pos);
+                auto den = value.substr(slash_pos + 1);
+                float_val = double(stoll(num)) / double(stoll(den));
+            }
+            else
+            {
+                float_val = stod(value);
+            }
         }
         catch(std::out_of_range &)
         {
             throw eval_error("Invalid float: " + value);
         }
+        return ExecutionResult(std::make_shared<SchemeFloat>(float_val));
+    }
     if(type == ast_type_t::STRING)
         return ExecutionResult(std::make_shared<SchemeString>(value));
     if(type == ast_type_t::CHAR)

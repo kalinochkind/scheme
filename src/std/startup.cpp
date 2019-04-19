@@ -101,6 +101,7 @@ const std::string startup =
     "(define memv (member-procedure eqv?)) "
     "(define member (member-procedure equal?)) "
     "(define real? number?) "
+    "(define rational? number?) "
     "(define (integer? x) (and (number? x) (= x (round x)))) "
     "(define (inexact? x) (and (number? x) (not (exact? x)))) "
     "(define exact-integer? exact?)"

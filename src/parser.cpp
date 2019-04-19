@@ -6,10 +6,11 @@
 ast_type_t identifier_type(const std::string &s)
 {
     static const std::regex float_re("^-?(\\d+\\.\\d*|\\d*\\.\\d+)$");
+    static const std::regex rational_re("^-?\\d+\\/-?\\d+$");
     static const std::regex int_re("^-?\\d+$");
     if(std::regex_match(s, int_re))
         return ast_type_t::INT;
-    if(std::regex_match(s, float_re))
+    if(std::regex_match(s, float_re) || std::regex_match(s, rational_re))
         return ast_type_t::FLOAT;
     return ast_type_t::NAME;
 }
