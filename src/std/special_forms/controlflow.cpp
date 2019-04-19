@@ -178,5 +178,23 @@ static SpecialFormPackage package(
             return res;
         }
         },
+        {"when", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
+            if(l.size() != 2)
+                throw eval_error("when: 2 arguments required");
+            if(l.front()->evaluate(context).force_value()->to_bool())
+                return l.back()->evaluate(context);
+            else
+                return ExecutionResult(scheme_empty);
+        }
+        },
+        {"unless", [](const std::list<std::shared_ptr<ASTNode>> &l, const Context &context) {
+            if(l.size() != 2)
+                throw eval_error("unless: 2 arguments required");
+            if(!l.front()->evaluate(context).force_value()->to_bool())
+                return l.back()->evaluate(context);
+            else
+                return ExecutionResult(scheme_empty);
+        }
+        },
     }
 );

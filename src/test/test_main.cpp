@@ -145,6 +145,8 @@ static void test_special_forms()
     run_test("(equal? (do ((vec (make-vector 5))(i 0 (+ i 1)))((= i 5) vec)(vector-set! vec i i)) '#(0 1 2 3 4))",
              "#t");
     run_test("(let ((x '(1 3 5 7 9)))(do ((x x (cdr x))(sum 0 (+ sum (car x))))((null? x) sum)))", "25");
+    run_test("(let ([x 3]) (unless (= x 0) (set! x (+ x 1))) (when (= x 4) (set! x (* x 2))) x)", "8");
+    run_test("(let ([x 3]) (when (= x 0) (set! x (+ x 1))) (unless (= x 3) (set! x (* x 2))) x)", "3");
 }
 
 static void test_equality()
