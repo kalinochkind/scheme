@@ -60,12 +60,12 @@ static ParseResult read_quoted(std::istream &is, const std::shared_ptr<ASTNode> 
     return object;
 }
 
-static ParseResult read_list(std::istream &is, const std::shared_ptr<ASTNode> &node)
+static ParseResult read_list(std::istream &is, const std::shared_ptr<ASTNode> &node, bool square)
 {
     node->type = ast_type_t::LIST;
     skip_whitespace(is);
     int c = is.peek();
-    while(c != EOF && c != ')')
+    while(c != EOF && c != ')' && c != ']')
     {
         auto object = read_object(is);
         if(object.result != parse_result_t::OK)
@@ -76,6 +76,8 @@ static ParseResult read_list(std::istream &is, const std::shared_ptr<ASTNode> &n
     if(c == EOF)
         return ParseResult("Unclosed list literal");
     is.get();
+    if((c == ']') != square)
+        return ParseResult("Wrong closing bracket");
     return ParseResult(node);
 }
 
@@ -96,6 +98,7 @@ ParseResult read_object(std::istream &is)
         case EOF:
             return ParseResult();
         case ')':
+        case ']':
             return ParseResult("Invalid syntax");
         case '"':
             o->type = ast_type_t::STRING;
@@ -135,7 +138,8 @@ ParseResult read_object(std::istream &is)
                 return ParseResult("Unclosed string literal");
             return o;
         case '(':
-            if((result = read_list(is, o)).result != parse_result_t::OK)
+        case '[':
+            if((result = read_list(is, o, c == '[')).result != parse_result_t::OK)
                 return result;
             return o;
         case '\'':
@@ -190,7 +194,8 @@ ParseResult read_object(std::istream &is)
                         return ParseResult("Invalid character: #\\" + charname);
                     return o;
                 case '(':
-                    if((result = read_list(is, o)).result != parse_result_t::OK)
+                case '[':
+                    if((result = read_list(is, o, c == '[')).result != parse_result_t::OK)
                         return result;
                     o->type = ast_type_t::VECTOR;
                     return o;

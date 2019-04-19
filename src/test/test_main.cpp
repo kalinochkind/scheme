@@ -74,6 +74,7 @@ static void test_basic()
     run_test("(equal? #\\a #\\A)", "#f");
     run_test("(define x ; 5 \n 6) x", "6");
     run_test("((if #f = *) 3 4)", "12");
+    run_test("[+ 2 (+ 3 [+ 4 5])]", "14");
 }
 
 static void test_special_forms()
