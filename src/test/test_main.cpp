@@ -75,6 +75,10 @@ static void test_basic()
     run_test("(define x ; 5 \n 6) x", "6");
     run_test("((if #f = *) 3 4)", "12");
     run_test("[+ 2 (+ 3 [+ 4 5])]", "14");
+    run_test("(- 0 5)", "-5");
+    run_test("+5", "5");
+    run_test("+5.0", "5.0");
+    run_test("+5/2", "2.5");
 }
 
 static void test_special_forms()
