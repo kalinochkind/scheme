@@ -194,5 +194,39 @@ static FunctionPackage package(
             auto s = std::make_shared<SchemeString>(os->str());
             return to_object(s);
         }}},
+        {"load", {1, 2, [](const std::list<std::shared_ptr<SchemeObject>> &l) {
+            auto name = std::dynamic_pointer_cast<SchemeString>(l.front());
+            if(!name)
+                throw eval_error("load: a string required");
+            std::shared_ptr<SchemeEnvironment> env;
+            if(l.size() == 2)
+            {
+                env = std::dynamic_pointer_cast<SchemeEnvironment>(l.back());
+                if(!env)
+                    throw eval_error("load: not an environment");
+            }
+            else
+            {
+                env = std::make_shared<SchemeEnvironment>(global_context);
+            }
+            std::ifstream file(name->value);
+            if(!file.is_open())
+                throw eval_error("load: failed to open file");
+            std::vector<std::shared_ptr<ASTNode>> nodes;
+            while(true)
+            {
+                ParseResult x = read_object(file);
+                if(x.result == parse_result_t::END)
+                    break;
+                if(x.result == parse_result_t::ERROR)
+                    throw eval_error("load: failed to parse file");
+                nodes.emplace_back(std::move(x.node));
+            }
+            for(auto &node : nodes)
+            {
+                node->evaluate(env->context).force_value();
+            }
+            return scheme_empty;
+        }}},
     }
 );
