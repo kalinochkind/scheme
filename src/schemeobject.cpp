@@ -163,7 +163,7 @@ std::string SchemePair::external_repr() const
         if(prefix.length())
         {
             auto pcdr = std::dynamic_pointer_cast<SchemePair>(cdr);
-            if(pcdr->cdr == scheme_nil)
+            if(pcdr && pcdr->cdr == scheme_nil)
                 return prefix + pcdr->car->external_repr();
         }
     }

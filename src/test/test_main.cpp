@@ -441,6 +441,8 @@ static void test_io()
              "(set-current-output-port! o) (write (read-char)) (equal? (get-output-string o) \"#\\\\q\")", "#t");
     run_test("(equal? (with-output-to-string (lambda () (write 'abc))) \"abc\")", "#t");
     run_test("(equal? (write-to-string \"1 2 3\") \"\\\"1 2 3\\\"\")", "#t");
+    run_test("(equal? (write-to-string ''(a b c)) \"'(a b c)\")", "#t");
+    run_test("(equal? (write-to-string '(quote . 1)) \"(quote . 1)\")", "#t");
     run_test("(equal? (with-input-from-string \"qw\" (lambda () "
              "(list (peek-char) (read-char) (read-char) (peek-char) (read-char)))) '(#\\q #\\q #\\w eof eof))", "#t");
 }
